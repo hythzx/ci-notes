@@ -5,7 +5,7 @@ import {createHash,timingSafeEqual} from 'node:crypto';
 import {openStore} from './store.mjs';
 const digest=v=>createHash('sha256').update(v).digest();
 export function createApp({databasePath,username,password,distPath=resolve('dist'),seed=true}){
- if(!username||username.includes(':')||!password||password.length<12)throw new Error('请设置 APP_USERNAME 和至少 12 位的 APP_PASSWORD（用户名不能包含冒号）');
+ if(!username||username.includes(':')||!password||password.length<8)throw new Error('请设置 APP_USERNAME 和至少 8 位的 APP_PASSWORD（用户名不能包含冒号）');
  const store=openStore(databasePath,{seed});
  const expected=digest(`${username}:${password}`);
  const json=(res,status,value)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(value));};

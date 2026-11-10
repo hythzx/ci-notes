@@ -1,5 +1,5 @@
 {
-  "name": "ci-notes", "version": "1.0.0", "private": true, "type": "module",
+  "name": "ci-notes", "version": "1.0.1", "private": true, "type": "module",
   "description": "词间：可自行部署的古典诗词随笔与阅读札记",
   "engines": {"node": ">=24.14.0 <25"},
   "scripts": {"dev":"vite --host 0.0.0.0", "dev:server":"node --env-file-if-exists=.env --watch server/index.mjs", "build":"tsc --noEmit && vite build", "start":"node --env-file-if-exists=.env server/index.mjs", "test":"node --test test/*.test.mjs", "backup":"node --env-file-if-exists=.env scripts/backup.mjs", "import":"node --env-file-if-exists=.env scripts/import.mjs"},

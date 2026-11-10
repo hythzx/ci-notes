@@ -26,7 +26,7 @@ cd ci-notes
 cp .env.example .env
 ```
 
-编辑 `.env`，填写 `APP_USERNAME` 和至少 12 位的 `APP_PASSWORD`。没有内置默认密码，密码不符合要求时应用会拒绝启动。包含 `$`、`#` 等字符时用单引号包围密码值。
+编辑 `.env`，填写 `APP_USERNAME` 和至少 8 位的 `APP_PASSWORD`。没有内置默认密码，密码不符合要求时应用会拒绝启动。包含 `$`、`#` 等字符时用单引号包围密码值。
 
 ```bash
 docker compose up -d --build
@@ -111,7 +111,7 @@ npm run import -- ./词间-完整备份.json
 | 变量 | 作用 | 默认值 |
 | --- | --- | --- |
 | `APP_USERNAME` | 登录用户名，不能包含冒号 | Compose 为 `admin`；Node 直接运行必填 |
-| `APP_PASSWORD` | 登录密码，至少 12 位 | 必填 |
+| `APP_PASSWORD` | 登录密码，至少 8 位 | 必填 |
 | `PORT` | Node 服务端口 / Compose 宿主机映射端口 | `3000` |
 | `HOST` | Node 监听地址 | `0.0.0.0` |
 | `BIND_ADDRESS` | Compose 宿主机监听地址 | `0.0.0.0` |
