@@ -1,0 +1,29 @@
+services:
+  ci-notes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ci-notes:local
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${BIND_ADDRESS:-0.0.0.0}:${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOST: 0.0.0.0
+      DATA_DIR: /app/data
+      APP_USERNAME: ${APP_USERNAME:-admin}
+      APP_PASSWORD: ${APP_PASSWORD:?请在 .env 中设置至少 12 位的 APP_PASSWORD}
+    volumes:
+      - ci-notes-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 15s
+volumes:
+  ci-notes-data:

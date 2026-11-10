@@ -1,0 +1,26 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Validate Compose and build image
+        env:
+          APP_PASSWORD: ci-only-not-a-real-password
+        run: |
+          docker compose config --quiet
+          docker build -t ci-notes:test .
+      - name: Container smoke test and persistence
+        run: bash scripts/test-container.sh
