@@ -10,3 +10,6 @@ backups/
 *.tsbuildinfo
 playwright-report/
 test-results/
+.v2c/
+.video_agent/
+.zcode/

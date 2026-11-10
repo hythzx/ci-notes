@@ -10,7 +10,7 @@
 - 每次保存追加一个不可变版本；定稿 / 已发布版本另建草稿继续写。
 - 检测同一篇札记的并发修改，拒绝静默覆盖。
 - SQLite 持久化、JSON 导出、Sites 旧版 JSON 导入、在线 SQLite 备份。
-- HTTP Basic 登录，用户名与密码通过环境变量配置。
+- 登录页与会话 Cookie（HttpOnly，30 天）登录，用户名与密码通过环境变量配置。
 
 初始内容包括柳永《凤栖梧》三阕、周邦彦《浣溪沙·楼上晴天碧四垂》、待导入的柳永随笔及和凝阅读线索。原文出处随条目保存，阅读提示标为个人理解，待核实项明确注明。随笔完整定稿未取得，正文留空；已有附记保留原文。
 
@@ -33,11 +33,11 @@ docker compose up -d --build
 docker compose logs -f ci-notes
 ```
 
-打开 `http://服务器地址:3000`，在浏览器登录提示框中输入 `.env` 中的用户名与密码。Basic 登录由浏览器管理；修改密码并重建容器可使原凭据失效。
+打开 `http://服务器地址:3000`，在登录页输入 `.env` 中的用户名与密码。登录态保存在 HttpOnly 会话 Cookie（30 天），侧边栏「退出登录」即时失效；修改密码并重建容器会使所有旧会话失效。
 
 - 对外端口由 `.env` 的 `PORT` 控制；容器内固定为 3000。
 - 默认监听所有网卡；仅本机反向代理访问时设 `BIND_ADDRESS=127.0.0.1`。
-- **公网访问请通过 HTTPS 反向代理**，Basic 凭据需要 TLS 保护。代理应保留原始 `Host`（如 Nginx 的 `proxy_set_header Host $http_host;`），以便同源写入检查正常工作。
+- **公网访问请通过 HTTPS 反向代理**，登录凭据与会话 Cookie 需要 TLS 保护（经 HTTPS 访问时 Cookie 自动附加 `Secure`）。代理应保留原始 `Host`（如 Nginx 的 `proxy_set_header Host $http_host;`），以便同源写入检查正常工作。
 - 数据位于命名卷 `ci-notes-data` 内的 `/app/data/ci-notes.sqlite`。重建、更新、重启容器保留数据；`docker compose down -v` 会删除卷，勿用于普通升级。
 - 容器以非 root 用户运行，根文件系统只读；仅数据卷和 `/tmp` 可写。
 
@@ -119,11 +119,13 @@ npm run import -- ./词间-完整备份.json
 
 ## API 与版本语义
 
-除 `/api/health` 外，页面和 API 均要求 Basic 认证。
+除 `/api/health`、`/api/login`、`/api/logout` 外，API 均要求登录（会话 Cookie）；页面 shell 公开，札记数据全部经鉴权 API 返回。
 
 | 接口 | 用途 |
 | --- | --- |
 | `GET /api/health` | 不含札记信息的健康检查 |
+| `POST /api/login` | 登录，成功后下发 HttpOnly 会话 Cookie |
+| `POST /api/logout` | 退出登录，清除 Cookie 并使当前会话失效 |
 | `GET /api/notes` | 按版本顺序返回所有札记版本 |
 | `POST /api/notes` | 追加版本；请求为札记字段加 `expectedSeq`，新建用 `0` |
 | `GET /api/export` | 导出所有当前札记和历史版本 |

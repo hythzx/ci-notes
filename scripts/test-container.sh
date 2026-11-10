@@ -15,11 +15,12 @@ done
 export TEST_URL="http://127.0.0.1:$port" TEST_PASSWORD="$password"
 node --input-type=module <<'JS'
 import assert from 'node:assert/strict';
-const headers={Authorization:'Basic '+Buffer.from('admin:'+process.env.TEST_PASSWORD).toString('base64'),'Content-Type':'application/json'};
+const login=async()=>{const r=await fetch(process.env.TEST_URL+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'admin',password:process.env.TEST_PASSWORD})});assert.equal(r.status,200);return r.headers.get('set-cookie').split(';')[0];};
 assert.equal((await fetch(process.env.TEST_URL+'/api/notes')).status,401);
-const rows=await (await fetch(process.env.TEST_URL+'/api/notes',{headers})).json();
+const cookie=await login();
+const rows=await (await fetch(process.env.TEST_URL+'/api/notes',{headers:{Cookie:cookie}})).json();
 const note=JSON.parse(rows[0].data);note.id='container-test';note.title='容器持久化测试';
-const response=await fetch(process.env.TEST_URL+'/api/notes',{method:'POST',headers,body:JSON.stringify({...note,expectedSeq:0})});
+const response=await fetch(process.env.TEST_URL+'/api/notes',{method:'POST',headers:{'Content-Type':'application/json',Cookie:cookie},body:JSON.stringify({...note,expectedSeq:0})});
 assert.equal(response.status,201);
 JS
 docker restart "$name" >/dev/null
@@ -30,9 +31,11 @@ for i in $(seq 1 30); do
 done
 node --input-type=module <<'JS'
 import assert from 'node:assert/strict';
-const headers={Authorization:'Basic '+Buffer.from('admin:'+process.env.TEST_PASSWORD).toString('base64')};
-const rows=await (await fetch(process.env.TEST_URL+'/api/notes',{headers})).json();
+const login=await fetch(process.env.TEST_URL+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'admin',password:process.env.TEST_PASSWORD})});
+assert.equal(login.status,200);
+const cookie=login.headers.get('set-cookie').split(';')[0];
+const rows=await (await fetch(process.env.TEST_URL+'/api/notes',{headers:{Cookie:cookie}})).json();
 assert.ok(rows.some(r=>r.id==='container-test'));
-assert.equal((await fetch(process.env.TEST_URL+'/',{headers})).status,200);
+assert.equal((await fetch(process.env.TEST_URL+'/',{headers:{Cookie:cookie}})).status,200);
 console.log('Container persistence verified');
 JS

@@ -28,12 +28,21 @@ test('imports Sites backups atomically, preserves history and is repeatable',()=
   const copy=openStore(':memory:',{seed:false});try{assert.equal(copy.import(s.export()),3);assert.deepEqual(copy.export().notes,s.export().notes);}finally{copy.close();}
  }finally{s.close();}
 });
-test('HTTP auth, cross-origin protection, input validation and optimistic concurrency',async()=>{
+test('HTTP session login, cross-origin protection, input validation and optimistic concurrency',async()=>{
  const app=createApp({databasePath:':memory:',username:'admin',password:'test-password-long',seed:false});app.server.listen(0,'127.0.0.1');await once(app.server,'listening');const u=`http://127.0.0.1:${app.server.address().port}`;
- const headers={Authorization:'Basic '+Buffer.from('admin:test-password-long').toString('base64'),'Content-Type':'application/json'};
- const post=(body,extra={})=>fetch(u+'/api/notes',{method:'POST',headers:{...headers,...extra},body:JSON.stringify(body)});
+ const login=async(body,extra={})=>fetch(u+'/api/login',{method:'POST',headers:{'Content-Type':'application/json',...extra},body:JSON.stringify(body)});
  try{
-  assert.equal((await fetch(u+'/api/health')).status,200);assert.equal((await fetch(u+'/api/notes')).status,401);assert.equal((await fetch(u+'/api/export')).status,401);
+  assert.equal((await fetch(u+'/api/health')).status,200);
+  assert.equal((await fetch(u+'/')).status,200); // SPA shell 公开，数据经鉴权 API 返回
+  assert.equal((await fetch(u+'/api/notes')).status,401);assert.equal((await fetch(u+'/api/export')).status,401);
+  assert.equal((await login({username:'admin',password:'wrong-password-long'})).status,401);
+  assert.equal((await login({username:'admin',password:'test-password-long'},{'Content-Type':'text/plain'})).status,415);
+  assert.equal((await login({username:'admin',password:'test-password-long'},{Origin:'https://unrelated.example'})).status,403);
+  const session=await login({username:'admin',password:'test-password-long'});assert.equal(session.status,200);
+  const setCookie=session.headers.get('set-cookie');
+  assert.match(setCookie,/ci_session=/);assert.match(setCookie,/HttpOnly/);assert.match(setCookie,/SameSite=Strict/);assert.match(setCookie,/Max-Age=/);
+  const cookie=setCookie.split(';')[0];
+  const post=(body,extra={})=>fetch(u+'/api/notes',{method:'POST',headers:{'Content-Type':'application/json',Cookie:cookie,...extra},body:JSON.stringify(body)});
   assert.equal((await post({...draft(),expectedSeq:0},{Origin:'https://unrelated.example'})).status,403);
   assert.equal((await post({...draft(),expectedSeq:0},{'Content-Type':'text/plain'})).status,415);
   assert.equal((await post({...draft(),title:'',expectedSeq:0})).status,400);
@@ -41,7 +50,12 @@ test('HTTP auth, cross-origin protection, input validation and optimistic concur
   const saved=await post({...draft(),expectedSeq:0});assert.equal(saved.status,201);const row=await saved.json();
   assert.equal((await post({...draft(),expectedSeq:0})).status,409);
   assert.equal((await post({...draft(),body:'新版',expectedSeq:row.seq})).status,201);
-  const data=await (await fetch(u+'/api/export',{headers})).json();assert.equal(data.versions.length,2);assert.equal(data.notes[0].body,'新版');
+  const data=await (await fetch(u+'/api/export',{headers:{Cookie:cookie}})).json();assert.equal(data.versions.length,2);assert.equal(data.notes[0].body,'新版');
+  assert.equal((await fetch(u+'/api/logout',{method:'POST',headers:{Cookie:cookie}})).status,200);
+  assert.equal((await fetch(u+'/api/notes',{headers:{Cookie:cookie}})).status,401); // 登出后旧令牌即时失效
+  const again=await login({username:'admin',password:'test-password-long'});assert.equal(again.status,200);
+  const fresh=again.headers.get('set-cookie').split(';')[0];
+  assert.equal((await fetch(u+'/api/notes',{headers:{Cookie:fresh}})).status,200);
  }finally{await new Promise(r=>app.server.close(r));app.store.close();}
 });
 test('empty database seeds once and does not replace edits',()=>{const dir=mkdtempSync(join(tmpdir(),'ci-seed-'));const p=join(dir,'a.sqlite');let s=openStore(p);try{assert.equal(s.list().length,6);const first=s.list()[0];s.save({...JSON.parse(first.data),body:'自己的文字'},first.seq);s.close();s=openStore(p);assert.equal(s.list().length,7);assert.equal(JSON.parse(s.latest(first.id).data).body,'自己的文字');}finally{s.close();rmSync(dir,{recursive:true,force:true});}});
