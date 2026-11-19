@@ -37,6 +37,9 @@ test('创建生成 v1 版本', () => {
   assert.equal(revs.length, 1);
   assert.equal(revs[0].charCount, 7);
   assert.equal(revs[0].writingStatus, 'draft');
+  // 摘要行携带快照的正文与标题（历史页看内容 / 导出这一版使用）
+  assert.equal(revs[0].content, '衣带渐宽终不悔');
+  assert.equal(revs[0].title, '读柳永');
 });
 
 test('标题必填非空', () => {

@@ -191,7 +191,8 @@ export type RevisionReason = 'manual' | 'draft-from-final' | 'restore' | 'confli
 
 /**
  * 版本列表行（GET /api/notes/:id/revisions）：
- * 摘要形状，正文快照不随列表下发。
+ * 摘要形状，随行携带快照的 title/content（历史页「看内容」展开
+ * 与「导出这一版」使用）。
  */
 export interface RevisionRow {
   id: string;
@@ -201,6 +202,8 @@ export interface RevisionRow {
   reason: RevisionReason;
   charCount: number;
   writingStatus: WritingStatus;
+  title: string;
+  content: string;
 }
 
 /** 完整版本行：createNote 返回值与备份导出 data.revisions 使用 */

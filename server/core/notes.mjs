@@ -173,7 +173,8 @@ function pushRevision(db, note, reason, changeNote) {
   return rev;
 }
 
-/** 版本行 → 列表摘要；charCount/writingStatus 从快照取 */
+/** 版本行 → 列表摘要；charCount/writingStatus/content/title 从快照取
+ * （content/title 供历史页「看内容」展开与「导出这一版」使用） */
 function revisionSummary(row) {
   const snap = parseJson(row.snapshot);
   return {
@@ -184,6 +185,8 @@ function revisionSummary(row) {
     reason: row.reason,
     charCount: charCount(snap.content),
     writingStatus: snap.writingStatus,
+    content: snap.content !== undefined ? snap.content : '',
+    title: snap.title !== undefined ? snap.title : '',
   };
 }
 
