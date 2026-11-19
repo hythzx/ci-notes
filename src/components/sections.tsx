@@ -17,8 +17,11 @@
  *
  * 「新建意象/典故并关联」跳 #/imagery/new?link=<targetType>:<targetId>，
  * 由 Task 29/30 的编辑页消费（保存成功后回原目标并续接 use 编辑）。
+ * 回跳链路：编辑页把目标与实体 id 写进 sessionStorage（cn:linkTarget /
+ * cn:linkEntity），本区块挂载并首次加载时读出、清除，直接打开该实体的
+ * use 编辑（找不到则退回「关联已有」选择器）。
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
 import { ApiError } from '../types';
 import type { AllusionList, AllusionUse, ClaimKind, Claim, Citation, ImageryList, ImageryUse } from '../types';
@@ -106,6 +109,8 @@ interface UseSectionConfig {
   emptyText: string;
   /** 详情页链接前缀：#/imagery / #/allusions */
   basePath: string;
+  /** ?link= 回跳时 cn:linkEntity 的实体前缀：imagery / allusion */
+  entityKey: string;
   /** 表达作用字段的使用侧 label 与提示 */
   fnLabel: string;
   fnHint: string;
@@ -121,6 +126,7 @@ const IMAGERY_CONFIG: UseSectionConfig = {
   descLabel: '描述',
   emptyText: '还没有关联意象。',
   basePath: '#/imagery',
+  entityKey: 'imagery',
   fnLabel: '表达作用',
   fnHint: '在这件作品中的表达作用',
   listEntries: () =>
@@ -154,6 +160,7 @@ const ALLUSION_CONFIG: UseSectionConfig = {
   descLabel: '释义',
   emptyText: '还没有关联典故。',
   basePath: '#/allusions',
+  entityKey: 'allusion',
   fnLabel: '此处的典故解释',
   fnHint: '',
   listEntries: () =>
@@ -318,6 +325,23 @@ function UseSection({ cfg, targetType, targetId }: {
   const [saving, setSaving] = useState(false);
   const [confirmUse, setConfirmUse] = useState<NormalUse | null>(null);
 
+  // ?link= 回跳：意象 / 典故编辑保存成功后经 sessionStorage 带回目标详情，
+  // 首次加载数据时消费并直接打开该实体的 use 编辑（找不到则退回选择器）。
+  // 前缀不匹配（另一类实体的链接）时不消费，留给同类区块处理。
+  const pendingLink = useRef<string | null>(null);
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('cn:linkTarget') !== targetType + ':' + targetId) return;
+      const entity = sessionStorage.getItem('cn:linkEntity') || '';
+      if (!entity.startsWith(cfg.entityKey + ':')) return;
+      pendingLink.current = entity.slice(cfg.entityKey.length + 1);
+      sessionStorage.removeItem('cn:linkTarget');
+      sessionStorage.removeItem('cn:linkEntity');
+    } catch {
+      /* 存储不可用时忽略 */
+    }
+  }, [targetType, targetId, cfg.entityKey]);
+
   /**
    * 拉取 uses 与实体全量列表（组头名称 + 选择器数据共用）。
    * keep 为 true 时保留旧数据（编辑 / 删除后的静默刷新），否则进入加载态。
@@ -330,6 +354,13 @@ function UseSection({ cfg, targetType, targetId }: {
         if (!alive) return;
         setUses(us);
         setEntities(es);
+        const linkId = pendingLink.current;
+        if (linkId) {
+          pendingLink.current = null;
+          const hit = es.find((e) => e.id === linkId);
+          if (hit) openCreate(hit);
+          else setPickerOpen(true);
+        }
       },
       (e: unknown) => {
         if (!alive) return;
