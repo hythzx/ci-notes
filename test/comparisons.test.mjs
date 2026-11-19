@@ -169,13 +169,46 @@ test('listComparisons 摘要带双侧标题，已删作品占位，updatedAt 倒
   assert.deepEqual(items.map((i) => i.id), [c2.id, c1.id]);
   const one = items[0];
   assert.deepEqual(Object.keys(one).sort(),
-    ['createdAt', 'id', 'title', 'updatedAt', 'workAId', 'workATitle', 'workBId', 'workBTitle'].sort());
+    ['createdAt', 'id', 'title', 'updatedAt', 'workAId', 'workATitle', 'workBId', 'workBTitle', 'writtenCount'].sort());
   assert.equal(one.title, '晚的');
   assert.equal(one.workATitle, '凤栖梧');
   assert.equal(one.workBTitle, '浣溪沙');
   // 悬空引用的作品显示占位
   assert.equal(items[1].workATitle, '凤栖梧');
   assert.equal(items[1].workBTitle, '（已删除的词作）');
+});
+
+test('listComparisons writtenCount：七维中 text 非空（trim 后）计数', () => {
+  const db = setup();
+  const a = createWork(db, { title: '凤栖梧' });
+  const b = createWork(db, { title: '浣溪沙' });
+  const empty = saveComparison(db, { title: '全空', workAId: a.id, workBId: b.id, dimensions: {} });
+  const c = saveComparison(db, {
+    title: '三维已写',
+    workAId: a.id,
+    workBId: b.id,
+    dimensions: {
+      context: { text: '情境' },
+      imagery: { text: '   ' }, // trim 后为空串，不计入
+      allusion: { text: '典故' },
+      similarity: { text: '相同点' },
+    },
+  });
+  const byId = new Map(listComparisons(db).map((i) => [i.id, i]));
+  assert.equal(byId.get(empty.id).writtenCount, 0);
+  assert.equal(byId.get(c.id).writtenCount, 3);
+});
+
+test('在册但标题为空的词作不误显示「已删除」占位', () => {
+  const db = setup();
+  const b = createWork(db, { title: '浣溪沙' });
+  // 直接插入一条标题为空的在册词作（绕过 createWork 的「标题或原文必填」校验）
+  db.prepare('INSERT INTO works(id,payload,revision,title,author,cipai,kind,updated_at) VALUES(?,?,?,?,?,?,?,?)')
+    .run('w_emptytitle', JSON.stringify({ id: 'w_emptytitle', title: '' }), 1, '', '', '', 'ci', new Date().toISOString());
+  const c = saveComparison(db, { title: '对照', workAId: 'w_emptytitle', workBId: b.id, dimensions: {} });
+  const item = listComparisons(db).find((i) => i.id === c.id);
+  assert.equal(item.workATitle, '');
+  assert.equal(item.workBTitle, '浣溪沙');
 });
 
 test('getComparison 装配 workA/workB，缺失为 null，NOT_FOUND', () => {

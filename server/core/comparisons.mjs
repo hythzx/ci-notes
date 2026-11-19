@@ -14,7 +14,8 @@ import { getWork } from './works.mjs';
  *   - 新建时校验甲乙作品存在且不同（词间无校验）；更新沿用词间回落语义：
  *     title/workAId/workBId 留空时保留原值，不做存在性校验；
  *   - 内存数组改为 SQLite payload 行读写，写操作包 BEGIN IMMEDIATE 事务；
- *   - 列表返回摘要并装配 workATitle/workBTitle，作品已删显示「（已删除的词作）」。
+ *   - 列表返回摘要（含 writtenCount 七维已写计数）并装配 workATitle/workBTitle，
+ *     作品已删显示「（已删除的词作）」，在册但标题为空显示空串。
  * 对照无乐观锁、无版本历史（整体覆盖保存），不进回收站（直接删除）。
  */
 
@@ -188,7 +189,18 @@ export function getComparison(db, id) {
   return { comparison, workA: workOrNull(db, comparison.workAId), workB: workOrNull(db, comparison.workBId) };
 }
 
-/** 列表摘要：双侧标题从 works 标量列取，已删作品显示占位；updatedAt 倒序 */
+/** 七维中 text 非空（trim 后）的维数，前端用于显示「n / 7 个维度已写」 */
+function writtenDimensionCount(dimensions) {
+  const dims = dimensions || {};
+  return COMPARE_DIMENSIONS.filter(([key]) => trim((dims[key] || {}).text) !== '').length;
+}
+
+/** 作品在册返回其标题（可为空串），不在册显示「已删除」占位 */
+function workTitleOrDeleted(titles, id) {
+  return titles.has(id) ? titles.get(id) : DELETED_WORK_LABEL;
+}
+
+/** 列表摘要：含 writtenCount；双侧标题从 works 标量列取，已删作品显示占位；updatedAt 倒序 */
 export function listComparisons(db) {
   const titles = new Map(db.prepare('SELECT id, title FROM works').all().map((r) => [r.id, r.title]));
   const rows = db.prepare('SELECT payload FROM comparisons ORDER BY updated_at DESC').all();
@@ -199,8 +211,9 @@ export function listComparisons(db) {
       title: c.title,
       workAId: c.workAId,
       workBId: c.workBId,
-      workATitle: titles.get(c.workAId) || DELETED_WORK_LABEL,
-      workBTitle: titles.get(c.workBId) || DELETED_WORK_LABEL,
+      workATitle: workTitleOrDeleted(titles, c.workAId),
+      workBTitle: workTitleOrDeleted(titles, c.workBId),
+      writtenCount: writtenDimensionCount(c.dimensions),
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
     };
