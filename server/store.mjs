@@ -1,4 +1,5 @@
 import { openDb } from './core/db.mjs';
+import { StoreError } from './core/errors.mjs';
 import { isEmpty, seedAll } from './core/seeddata.mjs';
 import { listWorks, getWork, createWork, updateWork } from './core/works.mjs';
 import {
@@ -60,11 +61,12 @@ export function createStore(dbPath, { seed = true, dataDir } = {}) {
   const store = {};
   for (const [name, fn] of Object.entries(DOMAIN)) {
     store[name] = (...args) => {
-      if (closed) throw new Error('store 已关闭');
+      if (closed) throw new StoreError('INVALID', 'store 已关闭');
       return fn(db, ...args);
     };
   }
   store.close = () => {
+    if (closed) return; // 幂等：优雅关闭路径可能多次触发
     closed = true;
     db.close();
   };
