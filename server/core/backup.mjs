@@ -18,7 +18,8 @@ import { COMPARE_DIMENSIONS } from './comparisons.mjs';
  *   - 幂等增强（idMap 一致性）：冲突副本 id 由 backupHash 确定性派生；副本已存在时
  *     idMap 仍登记 旧id→副本id，且比较先做原样对比、再做经 idMap 重映射的对比，
  *     使同一备份（含跨引用冲突场景）二次导入全部按同内容跳过；
- *   - 不覆盖任何已有内容：合并只有 INSERT，无 UPDATE/DELETE（定稿/已发布自然受保护）；
+ *   - 对已有内容仅 INSERT（不覆盖、不删除，定稿/已发布自然受保护）；仅对本批次新导入的
+ *     札记做派生指针（draftOf/draftNoteId）的 UPDATE 修正（fixupDraftPointers）；
  *     引用重映射只作用于本次导入的记录，不回写目标库既有记录。
  * sameContent 忽略 updatedAt/revision（normalize.mjs），本模块在其外层再剥
  * ownerId/originOwnerId/app_id/owner_name/conflictOf/importedFrom/draftNoteId

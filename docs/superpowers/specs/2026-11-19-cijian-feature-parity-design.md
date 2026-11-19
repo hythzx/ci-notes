@@ -161,7 +161,7 @@ GET  /api/trash | POST /api/trash/:id/restore | DELETE /api/trash/:id
 | 版本 | list_revisions, compare_revisions, restore_revision |
 | 对照 | list_comparisons, save_comparison |
 | 意象 | list_imagery, get_imagery, create_imagery, update_imagery, delete_imagery, link_imagery, list_imagery_of, compare_imagery |
-| 典故★ | list_allusions, get_allusion, create_allusion, update_allusion, link_allusion, list_allusions_of, compare_allusions |
+| 典故★ | list_allusions, get_allusion, create_allusion, update_allusion, delete_allusion, link_allusion, list_allusions_of, compare_allusions |
 | 其他 | search, get_stats, export_backup |
 
 - 工具描述沿用词间文案原则（如 create_note 强调「正文写用户自己的文字，不要代写」、create_imagery 强调「不要给意象定死含义」）；典故工具相应强调「释义是通用解释，具体到作品的理解记在 link_allusion」。

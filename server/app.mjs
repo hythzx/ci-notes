@@ -223,7 +223,8 @@ export function createApp({dbPath,dataDir,username,password,sessionSecret,distPa
     return handleMcp(req,res,store,raw);
    }
    if(!['GET','HEAD'].includes(req.method))return json(res,405,{error:'不支持的请求方法'});
-   const relative=decodeURIComponent(url.pathname).replace(/^\/+/, '');
+   let relative;
+   try{relative=decodeURIComponent(url.pathname).replace(/^\/+/, '');}catch{return json(res,400,{error:'URL 编码非法'});}
    const path=resolve(distPath,relative||'index.html');
    if(!path.startsWith(resolve(distPath)+'/'))return json(res,403,{error:'禁止访问'});
    if(!existsSync(path)||!statSync(path).isFile())return json(res,404,{error:'页面不存在'});
