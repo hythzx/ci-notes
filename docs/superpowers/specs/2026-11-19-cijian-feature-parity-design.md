@@ -152,7 +152,7 @@ GET  /api/trash | POST /api/trash/:id/restore | DELETE /api/trash/:id
 - **鉴权**：`X-CiNotes-Key` 头优先、`Authorization: Bearer` 兜底（忽略 `eyJ` 开头的 JWT）；密钥 `cin_` + 64 hex（Web Crypto 随机）；库中只存 SHA-256；INVALID_KEY 返回 401 带诊断信息（keyLen/keyHead/keyTail，不泄露密钥）；撤销即时生效（每次查询 status）；每次调用刷新 `last_used_at`。
 - **无状态**：每次调用直接事务读写 SQLite（与词间「pull 整库→改→写回」不同——服务器本就在库旁，直接读写更简单可靠；业务规则不变）。
 - **协议方法**：initialize（serverInfo `{name:'ci-notes', version}` + instructions，沿用词间写作原则文案：不代写正文、不把怀念都解释成遗憾、定稿不能就地改）、tools/list（带 readOnlyHint）、tools/call、ping、resources/list（空）、prompts/list（空）；未知工具 -32602、未知方法 -32601。
-- **工具清单（32 个）**：
+- **工具清单（34 个；2026-11-20 修订：初版计数 32 为笔误——意象侧漏计 delete_imagery，实现按意象/典故对称各 8 个工具采纳 34）**：
 
 | 类别 | 工具 |
 | --- | --- |
@@ -160,7 +160,7 @@ GET  /api/trash | POST /api/trash/:id/restore | DELETE /api/trash/:id
 | 札记 | list_notes, get_note, create_note, update_note, delete_note |
 | 版本 | list_revisions, compare_revisions, restore_revision |
 | 对照 | list_comparisons, save_comparison |
-| 意象 | list_imagery, get_imagery, create_imagery, update_imagery, link_imagery, list_imagery_of, compare_imagery |
+| 意象 | list_imagery, get_imagery, create_imagery, update_imagery, delete_imagery, link_imagery, list_imagery_of, compare_imagery |
 | 典故★ | list_allusions, get_allusion, create_allusion, update_allusion, link_allusion, list_allusions_of, compare_allusions |
 | 其他 | search, get_stats, export_backup |
 

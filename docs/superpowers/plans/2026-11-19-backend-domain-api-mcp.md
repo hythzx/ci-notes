@@ -712,7 +712,7 @@ POST   /api/mcp-keys/:id/revoke       POST /api/mcp-keys/:id/enable
 | get_stats | — | store.getStats |
 | export_backup | — | store.buildBackup（返回 JSON 文本） |
 
-（正好 32 个：works5 notes5 versions3 comparisons2 imagery7 allusions7 other3。）
+（34 个：works5 notes5 versions3 comparisons2 imagery8 allusions8 other3。）
 - `delete_imagery`：同 delete_allusion 模式（impact 提示后删除）。
 - 工具返回统一 `{content:[{type:'text', text:…}], isError?}`；对象结果 JSON.stringify(text, null, 2)；StoreError → isError:true + code/message；CONFLICT → 文本含「把两版都读给用户听，由用户决定，不要自己挑一个覆盖」+ current JSON。
 
