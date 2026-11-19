@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync} from 'node:fs';
+import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {once} from 'node:events';
@@ -16,7 +16,11 @@ const USERNAME='admin',PASSWORD='test-password-long';
 
 async function startApp(){
   const dir=mkdtempSync(join(tmpdir(),'ci-http-'));
-  const app=createApp({dbPath:join(dir,'test.sqlite'),username:USERNAME,password:PASSWORD});
+  // 自建 dist fixture：测试不依赖 vite 构建产物（CI 中 npm test 先于 npm run build，无 dist/）
+  const dist=join(dir,'dist');
+  mkdirSync(dist,{recursive:true});
+  writeFileSync(join(dist,'index.html'),'<html>test-shell</html>');
+  const app=createApp({dbPath:join(dir,'test.sqlite'),username:USERNAME,password:PASSWORD,distPath:dist});
   app.server.listen(0,'127.0.0.1');
   await once(app.server,'listening');
   const base=`http://127.0.0.1:${app.server.address().port}`;
