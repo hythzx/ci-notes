@@ -9,7 +9,7 @@
  *     仅保存成功后清除；
  *   - 冲突为三选一 ChooseBox（词间为二选确认框）。
  *
- * 详情页意象 / 典故区本 Task 以占位 div 留槽（Task 28 接线）。
+ * 详情页意象 / 典故区由 components/sections 的区块组件提供（自拉数据）。
  * 布局类名 cj-*（Task 23 全量样式），基件复用 components 的 cn-* 组件。
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -45,6 +45,7 @@ import {
   TextArea,
 } from '../components/editors';
 import { Md } from '../components/md';
+import { AllusionSection, ImagerySection } from '../components/sections';
 import { citationLine, download, formatDateTime, workToMarkdown } from '../exporter';
 import { navigate } from '../router';
 
@@ -90,6 +91,23 @@ function exportStamp(): string {
   const p = (n: number) => (n < 10 ? '0' + n : String(n));
   return (
     d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes())
+  );
+}
+
+/** 通用下拉：首项为「全部 xx」空选项（模块顶层定义，避免每次渲染重挂丢焦点） */
+function Sel({ label, value, onChange, options }: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
+  return (
+    <select className="cj-select cj-select-inline" value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">{label}</option>
+      {options.map((o) => (
+        <option key={o} value={o}>{o}</option>
+      ))}
+    </select>
   );
 }
 
@@ -160,23 +178,6 @@ export function WorksList() {
     setCipai('');
     setTag('');
     setKind('');
-  }
-
-  /** 通用下拉：首项为「全部 xx」空选项 */
-  function Sel({ label, value, onChange, options }: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    options: string[];
-  }) {
-    return (
-      <select className="cj-select cj-select-inline" value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">{label}</option>
-        {options.map((o) => (
-          <option key={o} value={o}>{o}</option>
-        ))}
-      </select>
-    );
   }
 
   return (
@@ -250,7 +251,7 @@ function citationHasContent(c: Citation): boolean {
   return !!(c.book || c.edition || c.page || c.url);
 }
 
-/** 词作详情（词间 views.workDetail 语义；意象/典故区为 Task 28 占位） */
+/** 词作详情（词间 views.workDetail 语义；意象/典故区由 sections 组件提供） */
 export function WorkDetail({ id }: { id: string }) {
   const [detail, setDetail] = useState<WorkDetail | null>(null);
   const [error, setError] = useState('');
@@ -443,13 +444,11 @@ export function WorkDetail({ id }: { id: string }) {
       </Section>
 
       <Section title="意象">
-        {/* Task 28 接线：<ImagerySection targetType="work" targetId={w.id} /> */}
-        <div data-slot="imagery-section" className="cj-card" />
+        <ImagerySection targetType="work" targetId={w.id} />
       </Section>
 
       <Section title="典故">
-        {/* Task 28 接线：<AllusionSection targetType="work" targetId={w.id} /> */}
-        <div data-slot="allusion-section" className="cj-card" />
+        <AllusionSection targetType="work" targetId={w.id} />
       </Section>
 
       {confirmRemove ? (

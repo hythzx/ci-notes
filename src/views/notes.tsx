@@ -16,7 +16,7 @@
  * 与 Task 25 的三点模式对齐：beforeunload 补 returnValue、load 带 alive
  * 守卫、列表下拉组件定义在模块顶层（避免每次渲染重挂丢焦点）。
  *
- * 阅读页意象 / 典故区本 Task 以占位 div 留槽（Task 28 接线）。
+ * 阅读页意象 / 典故区由 components/sections 的区块组件提供（自拉数据）。
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
@@ -53,6 +53,7 @@ import {
   TextArea,
 } from '../components/editors';
 import { Md } from '../components/md';
+import { AllusionSection, ImagerySection } from '../components/sections';
 import { citationLine, download, formatDateTime, noteToMarkdown } from '../exporter';
 import { navigate } from '../router';
 
@@ -294,7 +295,7 @@ export function NotesList() {
  * 札记阅读（词间 views.noteDetail 语义）。
  * 段落标注：Md 渲染完成后在 onGroup 里给每个段落组挂类名、点击监听与
  * 该段 claims 角标；点击任意段落开 Modal 列出该段全部标注与出处。
- * 意象 / 典故区为 Task 28 占位。
+ * 意象 / 典故区由 sections 组件提供。
  */
 export function NoteDetail({ id }: { id: string }) {
   const [detail, setDetail] = useState<NoteDetail | null>(null);
@@ -568,13 +569,11 @@ export function NoteDetail({ id }: { id: string }) {
       ) : null}
 
       <Section title="意象">
-        {/* Task 28 接线：<ImagerySection targetType="note" targetId={n.id} /> */}
-        <div data-slot="imagery-section" className="cj-card" />
+        <ImagerySection targetType="note" targetId={n.id} />
       </Section>
 
       <Section title="典故">
-        {/* Task 28 接线：<AllusionSection targetType="note" targetId={n.id} /> */}
-        <div data-slot="allusion-section" className="cj-card" />
+        <AllusionSection targetType="note" targetId={n.id} />
       </Section>
 
       {paraModal !== null ? (
