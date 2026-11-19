@@ -71,9 +71,9 @@ const WRITING_LABEL: Record<string, string> = {
   final: '定稿',
 };
 
-/** meta 行：作者 · 朝代 · 词牌，词牌空显示「词牌未填」，空字段剔除 */
-function workMetaText(w: { author: string; dynasty: string; cipai: string }): string {
-  const parts = [w.author, w.dynasty, w.cipai || '词牌未填'].filter(Boolean);
+/** meta 行：作者 · 朝代 · 词牌，仅词类空词牌补「词牌未填」（词间 utils/view 语义），空字段剔除 */
+function workMetaText(w: { author: string; dynasty: string; cipai: string; kind: WorkKind }): string {
+  const parts = [w.author, w.dynasty, w.kind === 'ci' && !w.cipai ? '词牌未填' : w.cipai].filter(Boolean);
   return parts.join(' · ');
 }
 
@@ -257,12 +257,22 @@ export function WorkDetail({ id }: { id: string }) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [removing, setRemoving] = useState(false);
 
-  function load() {
+  /** 返回清理函数供 effect 取消晚到响应；重试按钮也复用此函数 */
+  function load(): () => void {
+    let alive = true;
     setError('');
     setDetail(null);
-    api.works.get(id).then(setDetail, (e: unknown) => {
-      setError(e instanceof ApiError ? e.message : '加载失败');
-    });
+    api.works.get(id).then(
+      (d) => {
+        if (alive) setDetail(d);
+      },
+      (e: unknown) => {
+        if (alive) setError(e instanceof ApiError ? e.message : '加载失败');
+      },
+    );
+    return () => {
+      alive = false;
+    };
   }
 
   useEffect(load, [id]);
@@ -608,6 +618,7 @@ export function WorkEdit({ id }: { id?: string }) {
     if (!dirty) return;
     const guard = (e: BeforeUnloadEvent) => {
       e.preventDefault();
+      e.returnValue = ''; // Safari 等浏览器需 returnValue 才触发原生确认
     };
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
