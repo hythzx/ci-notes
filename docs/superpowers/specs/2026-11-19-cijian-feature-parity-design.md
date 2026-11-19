@@ -95,7 +95,7 @@ mcp_keys(id TEXT PRIMARY KEY, name TEXT NOT NULL, key_hash TEXT NOT NULL UNIQUE,
 **imageryUse**：`{id, imageryId, targetType('work'|'note'), targetId, quote(不解析逐字保留), context, function, understanding, claims[], citations[], createdAt, updatedAt, revision}`
 - 设计原则：意象≠主题标签；通用资料与具体使用严格分离；改通用资料不碰 usage；同一意象同一作品可多条使用记录。
 
-**allusion（典故）★新增**：`{id, name, aliases[], source(出处典籍，如《庄子·齐物论》), original(典故原文), explanation(典故释义：通用层——这个典故讲什么、通常表达什么), usages[{text, kind}], claims[], citations[], tags[], note(Markdown 阅读札记), createdAt, updatedAt, revision}`
+**allusion（典故）★新增**：`{id, name, aliases[], source(出处典籍，如《庄子·齐物论》), original(典故原文), explanation(典故释义：通用层——这个典故讲什么、通常表达什么), usages[{text, kind}], claims[], citations[], tags[], note(Markdown 阅读札记), mergedInto(被合并后指向目标典故 ID；空串=未合并；仅存 payload 无标量列), createdAt, updatedAt, revision}`
 **allusionUse（典故使用）★新增**：`{id, allusionId, targetType('work'|'note'), targetId, quote(对应词句，逐字保留), context(该处情境), interpretation(此处解释：具体层——在该作品中指什么), understanding(我的理解), claims[], citations[], createdAt, updatedAt, revision}`
 - 典故解释分两层：库内通用 `explanation` + 每处使用的 `interpretation`，与意象系统「通用资料/具体使用」分离原则一致。结构完全镜像意象系统（列表/详情/合并/影响计算/对照衔接）。
 
