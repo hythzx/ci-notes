@@ -6,13 +6,14 @@ import {
   excerpt, charCount, plainText, excerptOfNote,
 } from './normalize.mjs';
 import { imageryEntriesForTarget } from './imagery.mjs';
+import { allusionEntriesForTarget } from './allusions.mjs';
 
 /**
  * 词作实体：CRUD、CAS 乐观锁、搜索与筛选。
  * 语义逐段翻译自词间参考实现 utils/store-core.js 的 works 部分：
  * makeWork/createWork/updateWork/listWorks/workMatchesText/getWorkDetail。
  * 差异：内存 db 对象改为 SQLite payload 列读写；单用户，去掉 ownerId/ownedRecords。
- * imagery 装配由 imagery.mjs 提供（uses 表按意象分组）；allusions 为空占位，Task 7 接入。
+ * imagery / allusions 装配分别由 imagery.mjs / allusions.mjs 提供（uses 表按分组键装配）。
  */
 
 function str(v) {
@@ -247,7 +248,10 @@ export function getWork(db, id) {
     .filter((n) => (n.workIds || []).indexOf(work.id) >= 0)
     .sort((a, b) => str(b.updatedAt).localeCompare(str(a.updatedAt)))
     .map(noteSummary);
-  // imagery 装配自 imagery_uses 表（按意象分组）；allusions 空占位，Task 7 接入
-  const imagery = { entries: imageryEntriesForTarget(db, 'work', work.id), allusions: { entries: [] } };
+  // imagery / allusions 分别装配自 imagery_uses / allusion_uses 表（按各自实体分组）
+  const imagery = {
+    entries: imageryEntriesForTarget(db, 'work', work.id),
+    allusions: { entries: allusionEntriesForTarget(db, 'work', work.id) },
+  };
   return { work, relatedWorks, linkedNotes, imagery };
 }

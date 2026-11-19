@@ -7,6 +7,7 @@ import {
 } from './normalize.mjs';
 import { diffText, charDiff } from './diffcore.mjs';
 import { imageryEntriesForTarget } from './imagery.mjs';
+import { allusionEntriesForTarget } from './allusions.mjs';
 
 /**
  * 札记实体：CRUD、CAS 乐观锁、版本历史与 diff。
@@ -20,7 +21,7 @@ import { imageryEntriesForTarget } from './imagery.mjs';
  *   - saveNote 冲突消息与返回形状按 brief；
  *   - restoreRevision 恢复 snapshot 的全部内容字段（含 tags/pendingImport，
  *     参考实现沿用当前稿 tags 属于遗留偏差）。
- * imagery 装配由 imagery.mjs 提供（uses 表按意象分组）；allusions 为空占位，Task 7 接入。
+ * imagery / allusions 装配分别由 imagery.mjs / allusions.mjs 提供（uses 表按分组键装配）。
  */
 
 const WRITING_STATUSES = ['idea', 'research', 'draft', 'final'];
@@ -376,8 +377,11 @@ export function getNote(db, id) {
       const work = parseJson(r.payload);
       return { work, claimGroups: claimGroupsOf(work) };
     });
-  // imagery 装配自 imagery_uses 表（按意象分组）；allusions 空占位，Task 7 接入
-  const imagery = { entries: imageryEntriesForTarget(db, 'note', note.id), allusions: { entries: [] } };
+  // imagery / allusions 分别装配自 imagery_uses / allusion_uses 表（按各自实体分组）
+  const imagery = {
+    entries: imageryEntriesForTarget(db, 'note', note.id),
+    allusions: { entries: allusionEntriesForTarget(db, 'note', note.id) },
+  };
   return { note, linkedWorks, imagery };
 }
 
