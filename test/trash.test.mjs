@@ -17,15 +17,19 @@ test('trashWork：词作入回收站，札记保留且 workIds 剥除', () => {
   const db = setup();
   const work = createWork(db, { title: '雨霖铃', content: '寒蝉凄切' });
   const { note } = createNote(db, { title: '读雨霖铃', content: '词', workIds: [work.id] });
+  // 固定旧 updatedAt（回填到过去），避免 createNote 与 trashWork 同毫秒导致新旧值相等
+  const oldUpdatedAt = '2020-01-01T00:00:00.000Z';
+  db.prepare('UPDATE notes SET payload=? WHERE id=?')
+    .run(JSON.stringify({ ...note, updatedAt: oldUpdatedAt }), note.id);
   trashWork(db, work.id);
   // 词作行已删
   assert.equal(db.prepare('SELECT COUNT(*) c FROM works').get().c, 0);
-  // 札记仍在，workIds 已剥除；updatedAt/revision 不动（照词间 deleteWork）
+  // 札记仍在，workIds 已剥除；updatedAt 刷新为新值、revision 不动（照词间 deleteWork）
   const row = db.prepare('SELECT payload FROM notes WHERE id=?').get(note.id);
   assert.ok(row);
   const kept = JSON.parse(row.payload);
   assert.deepEqual(kept.workIds, []);
-  assert.equal(kept.updatedAt, note.updatedAt);
+  assert.notEqual(kept.updatedAt, oldUpdatedAt);
   assert.equal(kept.revision, note.revision);
   // 回收站一项，label 取标题
   const [item] = listTrash(db);

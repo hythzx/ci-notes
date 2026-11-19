@@ -9,8 +9,7 @@ import { plainText } from './normalize.mjs';
  * 不经它们的写函数，避免与模块内的行更新 / casUpdate 交叠。
  *
  * 词间语义核对（以 store-core.js 实测为准）：
- *   - deleteWork 剥除相关札记 workIds 且不递增 revision（本实现按任务约定
- *     连 updatedAt 也不改，仅重写 payload.workIds）；
+ *   - deleteWork 剥除相关札记 workIds，刷新受影响札记 updatedAt，不递增 revision；
  *   - deleteNote 入回收站时不删版本记录，purgeTrashItem 才连带删除；
  *   - restoreFromTrash 同 id 已存在时仅删除回收站项（幂等）；
  *   - 不提供「清空全部」入口。
@@ -87,12 +86,13 @@ export function trashWork(db, id) {
     const work = parseJson(row.payload);
     pushTrash(db, 'work', work.id, work.title || '（未命名词作）', row.payload);
     db.prepare('DELETE FROM works WHERE id=?').run(work.id);
-    // 关联札记只剥除 workIds（照词间 deleteWork：不递增 revision；按任务约定不改 updatedAt）
+    // 关联札记剥除 workIds 并刷新 updatedAt（照词间 deleteWork：不递增 revision）
     const notes = db.prepare('SELECT id, payload FROM notes').all();
     for (const n of notes) {
       const note = parseJson(n.payload);
       if ((note.workIds || []).indexOf(work.id) < 0) continue;
       note.workIds = note.workIds.filter((x) => x !== work.id);
+      note.updatedAt = nowIso();
       db.prepare('UPDATE notes SET payload=? WHERE id=?').run(JSON.stringify(note), n.id);
     }
     db.exec('COMMIT');
