@@ -52,6 +52,10 @@ CREATE TABLE IF NOT EXISTS mcp_keys(
 CREATE TABLE IF NOT EXISTS imports(
   id TEXT PRIMARY KEY, backup_hash TEXT NOT NULL, stats TEXT NOT NULL, imported_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS counters(name TEXT PRIMARY KEY, value INTEGER NOT NULL);
+CREATE TRIGGER IF NOT EXISTS preserve_revision_update BEFORE UPDATE ON revisions
+BEGIN SELECT RAISE(ABORT,'revisions are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS preserve_revision_delete BEFORE DELETE ON revisions
+BEGIN SELECT RAISE(ABORT,'revisions are immutable'); END;
 `;
 
 function hasLegacy(db) {
