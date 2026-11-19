@@ -4,11 +4,12 @@ import {resolve,extname} from 'node:path';
 import {createHash,createHmac,timingSafeEqual} from 'node:crypto';
 import {createStore} from './store.mjs';
 import {StoreError} from './core/errors.mjs';
+import {handleMcp} from './mcp.mjs';
 
 const digest=v=>createHash('sha256').update(v).digest();
 
-// body 体积上限：普通写入 220KB / 登录 4KB / 导入 8MB
-const WRITE_LIMIT=220000,LOGIN_LIMIT=4096,IMPORT_LIMIT=8*1024*1024;
+// body 体积上限：普通写入 220KB / 登录 4KB / 导入 8MB / MCP 4MB
+const WRITE_LIMIT=220000,LOGIN_LIMIT=4096,IMPORT_LIMIT=8*1024*1024,MCP_LIMIT=4*1024*1024;
 
 /**
  * HTTP 应用：安全头 + HMAC 会话 + REST API（store facade）+ 静态服务。
@@ -40,7 +41,8 @@ export function createApp({dbPath,dataDir,username,password,sessionSecret,distPa
   if(req.headers.origin){let origin;try{origin=new URL(req.headers.origin);}catch{return '无效的请求来源';}if(origin.host!==req.headers.host)return '不允许跨站写入';}
   return null;
  };
- const readJson=async(req,limit)=>{let size=0;const chunks=[];for await(const c of req){size+=c.length;if(size>limit)return{status:413,error:'内容过大'};chunks.push(c);}try{return{body:JSON.parse(Buffer.concat(chunks).toString('utf8'))};}catch{return{status:400,error:'JSON 格式不正确'};}};
+ const readRaw=async(req,limit)=>{let size=0;const chunks=[];for await(const c of req){size+=c.length;if(size>limit)return{status:413,error:'内容过大'};chunks.push(c);}return{body:Buffer.concat(chunks).toString('utf8')};};
+ const readJson=async(req,limit)=>{const r=await readRaw(req,limit);if(r.status)return r;try{return{body:JSON.parse(r.body)};}catch{return{status:400,error:'JSON 格式不正确'};}};
  const json=(res,status,value)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(value));};
  // StoreError → HTTP 状态与 {error:{code,message,current?}} 响应体
  const fail=(res,e)=>{
@@ -209,6 +211,16 @@ export function createApp({dbPath,dataDir,username,password,sessionSecret,distPa
      body=parsed.body;
     }
     return route.handler(res,params,body,Object.fromEntries(url.searchParams));
+   }
+   // MCP 端点：不走会话守卫，密钥鉴权与传输防护在 mcp.mjs 内部
+   if(url.pathname==='/mcp'){
+    let raw;
+    if(req.method==='POST'){
+     const parsed=await readRaw(req,MCP_LIMIT);
+     if(parsed.status)return json(res,parsed.status,{error:{code:parsed.status===413?'TOO_LARGE':'INVALID',message:parsed.error}});
+     raw=parsed.body;
+    }
+    return handleMcp(req,res,store,raw);
    }
    if(!['GET','HEAD'].includes(req.method))return json(res,405,{error:'不支持的请求方法'});
    const relative=decodeURIComponent(url.pathname).replace(/^\/+/, '');

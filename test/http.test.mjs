@@ -325,7 +325,25 @@ test('mcp-keys：创建返回明文、列表无明文、空名 400、revoke 失�
 
     assert.equal((await api(`/api/mcp-keys/${record.id}/revoke`,{method:'POST'})).status,200);
     assert.equal(app.store.findMcpKey(key),null); // 撤销即失配
-    // /mcp 端点的 401 断言属 Task 14（MCP over HTTP），此处以 store.findMcpKey 失配代替
+  }finally{await close();}
+});
+
+// 9b. Task 13 审查移交：撤销密钥后经 /mcp HTTP 请求得 401（MCP 密钥鉴权）
+test('mcp 端点：撤销密钥后经 /mcp 请求 401',async()=>{
+  const {base,close}=await startApp();
+  try{
+    const api=apiOf(base,await loginCookie(base));
+    const {key,record}=(await (await api('/api/mcp-keys',{method:'POST',body:{name:'撤销测试'}})).json());
+    const ping=()=>fetch(`${base}/mcp`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-cinotes-key':key},
+      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'ping'}),
+    });
+    assert.equal((await ping()).status,200);
+    assert.equal((await api(`/api/mcp-keys/${record.id}/revoke`,{method:'POST'})).status,200);
+    const after=await ping();
+    assert.equal(after.status,401);
+    assert.equal((await after.json()).error.code,-32001);
   }finally{await close();}
 });
 
