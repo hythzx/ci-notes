@@ -196,13 +196,15 @@ export interface ChooseItem {
   danger?: boolean;
 }
 
-/** 多选一对话框（冲突三选一等场景）：点选项回调 key，取消走 onCancel */
-export function ChooseBox({ title, message, choices, onPick, onCancel }: {
+/** 多选一对话框（冲突三选一等场景）：点选项回调 key，取消走 onCancel，
+ * 取消按钮文案可配（默认「先不处理」，如派生草稿弹窗用「留在原篇」） */
+export function ChooseBox({ title, message, choices, onPick, onCancel, cancelLabel = '先不处理' }: {
   title: string;
   message: ReactNode;
   choices: ChooseItem[];
   onPick: (key: string) => void;
   onCancel: () => void;
+  cancelLabel?: string;
 }) {
   return (
     <Modal title={title} onClose={onCancel}>
@@ -219,7 +221,7 @@ export function ChooseBox({ title, message, choices, onPick, onCancel }: {
           </button>
         ))}
         <button type="button" className="cn-choose-btn cn-choose-quiet" onClick={onCancel}>
-          先不处理
+          {cancelLabel}
         </button>
       </div>
     </Modal>

@@ -602,7 +602,7 @@ export function NoteDetail({ id }: { id: string }) {
       {confirmRemove ? (
         <ConfirmBox
           title="移到回收站"
-          message="这篇札记会先进回收站，可以再恢复。它的历史版本会一并删除。"
+          message="移入回收站后可恢复；只有永久删除才会连历史版本一起清掉。"
           danger
           onOk={remove}
           onCancel={() => setConfirmRemove(false)}
@@ -738,6 +738,9 @@ export function NoteEdit({ id }: { id?: string }) {
 
   // 乐观锁基准版本：ref 供保存闭包随时读取最新值
   const baseRevision = useRef<number | undefined>(undefined);
+  // 采用对方回填时置 true：让草稿写入 effect 跳过这一次写入，保护
+  // localStorage 里用户自己的文字（词间 theirs 分支不写暂存，同语义）
+  const skipDraftWrite = useRef(false);
 
   // dirty 由渲染时推导，避免状态双写不同步
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
@@ -789,9 +792,14 @@ export function NoteEdit({ id }: { id?: string }) {
     };
   }, [id, draftKey]);
 
-  /* 草稿暂存：700ms 防抖写入；卸载不删 */
+  /* 草稿暂存：700ms 防抖写入；卸载不删；采用对方回填的那一次跳过 */
   useEffect(() => {
     if (!loaded) return;
+    if (skipDraftWrite.current) {
+      // 本次 form 变化来自「采用对方」回填，不落暂存，复位标志
+      skipDraftWrite.current = false;
+      return;
+    }
     const t = setTimeout(() => {
       try {
         localStorage.setItem(draftKey, JSON.stringify(form));
@@ -876,7 +884,9 @@ export function NoteEdit({ id }: { id?: string }) {
       return;
     }
     if (key === 'theirs') {
-      // 采用对方的版本：表单与基准同步回填，之后由用户确认再手动保存
+      // 采用对方的版本：表单与基准同步回填，之后由用户确认再手动保存；
+      // 回填触发的防抖写入被跳过，本机暂存里仍是用户自己的文字
+      skipDraftWrite.current = true;
       const f = mergeForm(cur);
       baseRevision.current = cur.revision;
       setForm(f);
@@ -1139,6 +1149,7 @@ export function NoteEdit({ id }: { id?: string }) {
           choices={[{ key: 'go', label: '去看新草稿' }]}
           onPick={pickDerived}
           onCancel={() => setDerivedDraft(null)}
+          cancelLabel="留在原篇"
         />
       ) : null}
     </div>
