@@ -35,10 +35,12 @@ test('createStore 返回接口总表全部函数，且不暴露 db 句柄', () =
   } finally { store.close(); }
 });
 
-test('seed=true 空库不炸（seedAll 为桩）', () => {
+test('seed=true 空库写入种子：四词作两札记一对照', () => {
   const store = createStore(tempPath(), { seed: true });
   try {
-    assert.deepEqual(store.listWorks({}), []);
+    assert.equal(store.listWorks({}).length, 4);
+    assert.equal(store.listNotes({}).length, 2);
+    assert.equal(store.listComparisons().length, 1);
   } finally { store.close(); }
 });
 

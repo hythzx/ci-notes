@@ -1,122 +1,610 @@
-[
-  {
-    "status": "待写",
-    "publication": "未发布",
-    "body": "",
-    "appendix": "",
-    "evidence": "原文已核对；背景与解读分别注明。",
-    "change": "初始整理",
-    "allusion": "待核实具体出处",
-    "sources": "中国孔子网《全宋词·柳永》\nhttps://www.chinakongzi.org/kzsf/wxxs/mingpian/quansongci/200705/t20070522_16963.htm\n核对日期：2026-11-10",
-    "background": "已核对：所列来源编为《凤栖梧（三之一·小石调）》。具体作年与人物本事待核实。",
-    "id": "liuyong-1",
-    "title": "帘下清歌帘外宴",
-    "author": "柳永",
-    "tune": "凤栖梧",
-    "theme": "听歌、相思",
-    "original": "帘下清歌帘外宴。虽爱新声，不见如花面。牙板数敲珠一串，梁尘暗落琉璃盏。\n\n桐树花深孤凤怨。渐遏遥天，不放行云散。坐上少年听不惯。玉山未倒肠先断。",
-    "scene": "隔帘听歌，未见其人",
-    "imagery": "帘、牙板、琉璃盏、行云",
-    "expression": "先写歌声，再写听者的反应。〔个人理解〕"
-  },
-  {
-    "status": "待写",
-    "publication": "未发布",
-    "body": "",
-    "appendix": "",
-    "evidence": "原文已核对；背景与解读分别注明。",
-    "change": "初始整理",
-    "allusion": "待核实具体出处",
-    "sources": "中国孔子网《全宋词·柳永》\nhttps://www.chinakongzi.org/kzsf/wxxs/mingpian/quansongci/200705/t20070522_16963.htm\n核对日期：2026-11-10",
-    "background": "已核对：所列来源编为《凤栖梧（三之二·小石调）》。不要据连续编排认定三阕写同一段真实经历。",
-    "id": "liuyong-2",
-    "title": "伫倚危楼风细细",
-    "author": "柳永",
-    "tune": "凤栖梧",
-    "theme": "登楼、相思",
-    "original": "伫倚危楼风细细。望极春愁，黯黯生天际。草色烟光残照里。无言谁会凭阑意。\n\n拟把疏狂图一醉。对酒当歌，强乐还无味。衣带渐宽终不悔。为伊消得人憔悴。",
-    "scene": "独自凭栏，借酒难解相思",
-    "imagery": "危楼、草色、烟光、残照",
-    "expression": "从远景回到自身，末句直说心意。〔个人理解〕"
-  },
-  {
-    "status": "待写",
-    "publication": "未发布",
-    "body": "",
-    "appendix": "",
-    "evidence": "原文已核对；背景与解读分别注明。",
-    "change": "初始整理",
-    "allusion": "待核实具体出处",
-    "sources": "中国孔子网《全宋词·柳永》\nhttps://www.chinakongzi.org/kzsf/wxxs/mingpian/quansongci/200705/t20070522_16963.htm\n核对日期：2026-11-10",
-    "background": "已核对：所列来源编为《凤栖梧（三之三·小石调）》。人物身份、作年待核实。",
-    "id": "liuyong-3",
-    "title": "蜀锦地衣丝步障",
-    "author": "柳永",
-    "tune": "凤栖梧",
-    "theme": "相会、相思",
-    "original": "蜀锦地衣丝步障。屈曲回廊，静夜闲寻访。玉砌雕阑新月上。朱扉半掩人相望。\n\n旋暖熏炉温斗帐。玉树琼枝，迤逦相偎傍。酒力渐浓春思荡。鸳鸯绣被翻红浪。",
-    "scene": "静夜寻访，门前相望，到室内相偎",
-    "imagery": "回廊、新月、朱扉、熏炉",
-    "expression": "顺着人物的行动写近，暖帐的动作很有生活气。〔个人理解〕"
-  },
-  {
-    "status": "待写",
-    "publication": "未发布",
-    "body": "",
-    "appendix": "",
-    "evidence": "原文已核对；背景与解读分别注明。",
-    "change": "初始整理",
-    "allusion": "杜鹃与归思的联系；具体化用关系待查原典。",
-    "sources": "古文岛《浣溪沙·楼上晴天碧四垂》\nhttps://www.gushiwen.cn/shiwenv_fc223108428a.aspx\n核对日期：2026-11-10",
-    "background": "原文按古文岛所收周邦彦词核对。作者归属曾有异说，具体作年仍待查考；不将此篇与无想山夏日词的背景混用。",
-    "id": "zhou-1",
-    "title": "楼上晴天碧四垂",
-    "author": "周邦彦",
-    "tune": "浣溪沙",
-    "theme": "登楼、时光、惜春",
-    "original": "楼上晴天碧四垂，楼前芳草接天涯。劝君莫上最高梯。\n\n新笋已成堂下竹，落花都上燕巢泥。忍听林表杜鹃啼。",
-    "scene": "登楼望远，又回看堂下新竹",
-    "imagery": "高楼、芳草、新竹、落花、杜鹃",
-    "expression": "“已成”“都上”让春天的变化落在眼前。〔个人理解〕"
-  },
-  {
-    "status": "待导入",
-    "publication": "未发布",
-    "body": "",
-    "appendix": "“曲子相公”和凝，长艳词短曲，历仕后梁、后唐、后晋、后汉、后周五代。他有五首《江城子》，同样写了一段男女相会的故事。在那个礼崩乐坏、易子相食的黑暗时代，人们依然憧憬着美好的爱情。",
-    "evidence": "附记为用户原文；正文未导入；历史说法待核实。",
-    "change": "初始整理",
-    "allusion": "待核实具体出处",
-    "sources": "附记：用户于 2026-11-09 提供的原文，逐字保留。史实与组词连续性的论述仍需分别核实。",
-    "background": "用户已完成随笔；尚未取得完整定稿。正文留空，等待原稿导入。",
-    "id": "essay-liu",
-    "title": "柳永三阕《凤栖梧》随笔",
-    "author": "柳永",
-    "tune": "凤栖梧",
-    "theme": "相思、相会、写作连贯",
-    "original": "",
-    "scene": "隔帘听曲 → 独倚相思 → 月下相会〔个人读法〕",
-    "imagery": "帘、楼、月、门",
-    "expression": "三阕连读可形成叙述线索，不等同于作者本事。〔个人理解〕"
-  },
-  {
-    "status": "资料收集",
-    "publication": "未发布",
-    "body": "",
-    "appendix": "",
-    "evidence": "待核实",
-    "change": "初始整理",
-    "allusion": "待核实具体出处",
-    "sources": "",
-    "background": "与柳永随笔附记关联。五首原文、次序、生平与“曲子相公”称谓出处待核实后补入。",
-    "id": "he-1",
-    "title": "和凝五首《江城子》阅读线索",
-    "author": "和凝",
-    "tune": "江城子",
-    "theme": "相会、爱情",
-    "original": "",
-    "scene": "男女相会的连续读法，待结合全文讨论",
-    "imagery": "待录入原文后整理",
-    "expression": "保留为下一步阅读线索。"
-  }
-]
+{
+  "works": [
+    {
+      "id": "w_seed_liu_1",
+      "kind": "ci",
+      "title": "凤栖梧·其一（帘下清歌帘外宴）",
+      "author": "柳永",
+      "dynasty": "北宋",
+      "cipai": "凤栖梧",
+      "content": "帘下清歌帘外宴，虽爱新声，不见如花面。\n牙板数敲珠一串，梁尘暗落琉璃盏。\n桐树花深孤凤怨，渐遏遥天，不放行云散。\n坐上少年听不惯，玉山未倒肠先断。",
+      "background": "柳永（约984—约1053），字耆卿，北宋词人。本阕属《凤栖梧》调，又名《蝶恋花》，双调四十字。",
+      "claims": [
+        {
+          "id": "cl_seed_liu_1_a",
+          "kind": "verified",
+          "text": "原文依《全宋词》通行本整理，「牙板数敲珠一串」句各本无异文。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_liu_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+              "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_liu_1_b",
+          "kind": "pending",
+          "text": "此阕的具体系年与作地点尚无定论，待查年谱。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_liu_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+              "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_liu_1_c",
+          "kind": "pending",
+          "text": "据网络整理本附案语，此阕与第二阕又见欧阳修《近体乐府》卷二，卷次待核。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_ouyang_1",
+              "book": "欧阳修《近体乐府》",
+              "edition": "卷二（据网络整理本附案语，卷次待核实）",
+              "page": "页码待核实",
+              "url": "https://www.ziyexing.cn/shici/liuyong/liuyong_3.htm",
+              "note": "案语称前二阕别见此书，需查原书确认",
+              "verified": "pending"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        }
+      ],
+      "citations": [
+        {
+          "id": "ct_seed_liu_1",
+          "book": "唐圭璋《全宋词》",
+          "edition": "中华书局校订本（通行本）",
+          "page": "卷次与页码待核实",
+          "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+          "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+          "verified": "verified"
+        }
+      ],
+      "tags": [
+        "登楼",
+        "宴饮",
+        "离别"
+      ],
+      "relatedWorkIds": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "revision": 1
+    },
+    {
+      "id": "w_seed_liu_2",
+      "kind": "ci",
+      "title": "凤栖梧·其二（伫倚危楼风细细）",
+      "author": "柳永",
+      "dynasty": "北宋",
+      "cipai": "凤栖梧",
+      "content": "伫倚危楼风细细，望极春愁，黯黯生天际。\n草色烟光残照里，无言谁会凭阑意。\n拟把疏狂图一醉，对酒当歌，强乐还无味。\n衣带渐宽终不悔，为伊消得人憔悴。",
+      "background": "此阕即通行本《蝶恋花·伫倚危楼风细细》，为柳永最传诵的一阕。王国维《人间词话》以「衣带渐宽终不悔」为治学第二境。",
+      "claims": [
+        {
+          "id": "cl_seed_liu_2_a",
+          "kind": "verified",
+          "text": "「凤栖梧」与「蝶恋花」同调异名，「伫倚危楼风细细」一首两处互见。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_liu_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+              "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+              "verified": "verified"
+            },
+            {
+              "id": "ct_seed_ouyang_1",
+              "book": "欧阳修《近体乐府》",
+              "edition": "卷二（据网络整理本附案语，卷次待核实）",
+              "page": "页码待核实",
+              "url": "https://www.ziyexing.cn/shici/liuyong/liuyong_3.htm",
+              "note": "案语称前二阕别见此书，需查原书确认",
+              "verified": "pending"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_liu_2_b",
+          "kind": "verified",
+          "text": "王国维《人间词话》以「衣带渐宽终不悔，为伊消得人憔悴」为成大事业、大学问的第二种境界。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_liu_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+              "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_liu_2_c",
+          "kind": "pending",
+          "text": "「草色烟光残照里」中的「草」一说为「芳」，异文情况待核校本。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_liu_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+              "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_liu_2_d",
+          "kind": "pending",
+          "text": "作于何年何地，文献无确说，待查。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_liu_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+              "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        }
+      ],
+      "citations": [
+        {
+          "id": "ct_seed_liu_1",
+          "book": "唐圭璋《全宋词》",
+          "edition": "中华书局校订本（通行本）",
+          "page": "卷次与页码待核实",
+          "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+          "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+          "verified": "verified"
+        },
+        {
+          "id": "ct_seed_ouyang_1",
+          "book": "欧阳修《近体乐府》",
+          "edition": "卷二（据网络整理本附案语，卷次待核实）",
+          "page": "页码待核实",
+          "url": "https://www.ziyexing.cn/shici/liuyong/liuyong_3.htm",
+          "note": "案语称前二阕别见此书，需查原书确认",
+          "verified": "pending"
+        }
+      ],
+      "tags": [
+        "登楼",
+        "相思",
+        "春愁"
+      ],
+      "relatedWorkIds": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "revision": 1
+    },
+    {
+      "id": "w_seed_liu_3",
+      "kind": "ci",
+      "title": "凤栖梧·其三（蜀锦地衣丝步障）",
+      "author": "柳永",
+      "dynasty": "北宋",
+      "cipai": "凤栖梧",
+      "content": "蜀锦地衣丝步障，屈曲回廊，静夜闲寻访。\n玉砌雕阑新月上，朱扉半掩人相望。\n旋暖熏炉温斗帐，玉树琼枝，迤逦相偎傍。\n酒力渐浓春思荡，鸳鸯绣被翻红浪。",
+      "background": "此阕写夜访，写景用物极铺张，末句转入欢情。前阕「帘下清歌帘外宴」与此阕当为同一组词。",
+      "claims": [
+        {
+          "id": "cl_seed_liu_3_a",
+          "kind": "verified",
+          "text": "原文依《全宋词》通行本整理，「迤逦相偎傍」句通行本多作「迤逦」。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_liu_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+              "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_liu_3_b",
+          "kind": "pending",
+          "text": "三阕是否确为同一组词、同一作期，待考。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_liu_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+              "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        }
+      ],
+      "citations": [
+        {
+          "id": "ct_seed_liu_1",
+          "book": "唐圭璋《全宋词》",
+          "edition": "中华书局校订本（通行本）",
+          "page": "卷次与页码待核实",
+          "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+          "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+          "verified": "verified"
+        }
+      ],
+      "tags": [
+        "夜访",
+        "欢情",
+        "铺叙"
+      ],
+      "relatedWorkIds": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "revision": 1
+    },
+    {
+      "id": "w_seed_zhou_1",
+      "kind": "ci",
+      "title": "浣溪沙·楼上晴天碧四垂",
+      "author": "周邦彦",
+      "dynasty": "北宋",
+      "cipai": "浣溪沙",
+      "content": "楼上晴天碧四垂，楼前芳草接天涯。劝君莫上最高梯。\n新笋已成堂下竹，落花都上燕巢泥。忍听林表杜鹃啼。",
+      "background": "周邦彦（1056—1121），字美成，号清真居士，钱塘人。词作多写羁旅与身世，格律谨严，自号「词家之冠」。",
+      "claims": [
+        {
+          "id": "cl_seed_zhou_1_a",
+          "kind": "verified",
+          "text": "《浣溪沙》双调四十二字，本篇双调四十二字，字数与格律相合。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_zhou_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://baike.baidu.com/item/%E6%B5%A3%E6%BA%AA%E6%B2%99-%E6%A5%BC%E4%B8%8A%E6%99%B4%E5%A4%A9%E7%A2%91%E5%9B%9B%E5%9E%82",
+              "note": "词话注释参《宋词鉴赏辞典》一类工具书，具体页码待核实",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_zhou_1_b",
+          "kind": "verified",
+          "text": "「劝君莫上最高梯」句反用王之涣「更上一层楼」；「芳草接天涯」正用古乐府「青青河边草，绵绵思远道」。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_zhou_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://baike.baidu.com/item/%E6%B5%A3%E6%BA%AA%E6%B2%99-%E6%A5%BC%E4%B8%8A%E6%99%B4%E5%A4%A9%E7%A2%91%E5%9B%9B%E5%9E%82",
+              "note": "词话注释参《宋词鉴赏辞典》一类工具书，具体页码待核实",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_zhou_1_c",
+          "kind": "pending",
+          "text": "此阕又见李清照《漱玉词》，是否为唱和或误收，待考。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_zhou_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://baike.baidu.com/item/%E6%B5%A3%E6%BA%AA%E6%B2%99-%E6%A5%BC%E4%B8%8A%E6%99%B4%E5%A4%A9%E7%A2%91%E5%9B%9B%E5%9E%82",
+              "note": "词话注释参《宋词鉴赏辞典》一类工具书，具体页码待核实",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        },
+        {
+          "id": "cl_seed_zhou_1_d",
+          "kind": "pending",
+          "text": "网络资料称此词或作于宣和二年（1120）任顺昌知府时，此说未见文献支持，待核。",
+          "paragraph": -1,
+          "citations": [
+            {
+              "id": "ct_seed_zhou_1",
+              "book": "唐圭璋《全宋词》",
+              "edition": "中华书局校订本（通行本）",
+              "page": "卷次与页码待核实",
+              "url": "https://baike.baidu.com/item/%E6%B5%A3%E6%BA%AA%E6%B2%99-%E6%A5%BC%E4%B8%8A%E6%99%B4%E5%A4%A9%E7%A2%91%E5%9B%9B%E5%9E%82",
+              "note": "词话注释参《宋词鉴赏辞典》一类工具书，具体页码待核实",
+              "verified": "verified"
+            }
+          ],
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        }
+      ],
+      "citations": [
+        {
+          "id": "ct_seed_zhou_1",
+          "book": "唐圭璋《全宋词》",
+          "edition": "中华书局校订本（通行本）",
+          "page": "卷次与页码待核实",
+          "url": "https://baike.baidu.com/item/%E6%B5%A3%E6%BA%AA%E6%B2%99-%E6%A5%BC%E4%B8%8A%E6%99%B4%E5%A4%A9%E7%A2%91%E5%9B%9B%E5%9E%82",
+          "note": "词话注释参《宋词鉴赏辞典》一类工具书，具体页码待核实",
+          "verified": "verified"
+        }
+      ],
+      "tags": [
+        "登楼",
+        "思乡",
+        "羁旅"
+      ],
+      "relatedWorkIds": [
+        "w_seed_liu_2"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "revision": 1
+    }
+  ],
+  "notes": [
+    {
+      "id": "n_seed_liu_notes",
+      "title": "凤栖梧三阕读记",
+      "content": "",
+      "note": "",
+      "workIds": [
+        "w_seed_liu_1",
+        "w_seed_liu_2",
+        "w_seed_liu_3"
+      ],
+      "claims": [],
+      "citations": [
+        {
+          "id": "ct_seed_liu_1",
+          "book": "唐圭璋《全宋词》",
+          "edition": "中华书局校订本（通行本）",
+          "page": "卷次与页码待核实",
+          "url": "https://ctext.org/wiki.pl?if=gb&chapter=762233",
+          "note": "网络校对据「子夜星分站·宋柳永词全集·卷三」；正式引用前请核对纸本页码",
+          "verified": "verified"
+        }
+      ],
+      "tags": [
+        "柳永",
+        "凤栖梧"
+      ],
+      "writingStatus": "research",
+      "publishStatus": "unpublished",
+      "publish": {
+        "platform": "",
+        "publishedAt": "",
+        "url": ""
+      },
+      "changeNote": "初始条目，待导入原稿",
+      "pendingImport": true,
+      "draftOf": "",
+      "draftNoteId": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "revision": 1
+    },
+    {
+      "id": "n_seed_zhou_notes",
+      "title": "浣溪沙·楼上晴天碧四垂 札记",
+      "content": "",
+      "note": "",
+      "workIds": [
+        "w_seed_zhou_1"
+      ],
+      "claims": [],
+      "citations": [
+        {
+          "id": "ct_seed_zhou_1",
+          "book": "唐圭璋《全宋词》",
+          "edition": "中华书局校订本（通行本）",
+          "page": "卷次与页码待核实",
+          "url": "https://baike.baidu.com/item/%E6%B5%A3%E6%BA%AA%E6%B2%99-%E6%A5%BC%E4%B8%8A%E6%99%B4%E5%A4%A9%E7%A2%91%E5%9B%9B%E5%9E%82",
+          "note": "词话注释参《宋词鉴赏辞典》一类工具书，具体页码待核实",
+          "verified": "verified"
+        }
+      ],
+      "tags": [
+        "周邦彦",
+        "浣溪沙"
+      ],
+      "writingStatus": "idea",
+      "publishStatus": "unpublished",
+      "publish": {
+        "platform": "",
+        "publishedAt": "",
+        "url": ""
+      },
+      "changeNote": "初始条目，待导入原稿",
+      "pendingImport": true,
+      "draftOf": "",
+      "draftNoteId": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "revision": 1
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "cp_seed_liu_zhou",
+      "title": "柳永《凤栖梧·其二》 × 周邦彦《浣溪沙》",
+      "workAId": "w_seed_liu_2",
+      "workBId": "w_seed_zhou_1",
+      "dimensions": {
+        "context": {
+          "text": "",
+          "kind": "pending",
+          "citations": [],
+          "sides": {
+            "a": "",
+            "b": ""
+          }
+        },
+        "imagery": {
+          "text": "",
+          "kind": "pending",
+          "citations": [],
+          "sides": {
+            "a": "",
+            "b": ""
+          }
+        },
+        "allusion": {
+          "text": "",
+          "kind": "pending",
+          "citations": [],
+          "sides": {
+            "a": "",
+            "b": ""
+          }
+        },
+        "expression": {
+          "text": "",
+          "kind": "pending",
+          "citations": [],
+          "sides": {
+            "a": "",
+            "b": ""
+          }
+        },
+        "similarity": {
+          "text": "",
+          "kind": "pending",
+          "citations": []
+        },
+        "difference": {
+          "text": "",
+          "kind": "pending",
+          "citations": []
+        },
+        "understanding": {
+          "text": "",
+          "kind": "personal",
+          "citations": []
+        }
+      },
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "imagery": [
+    {
+      "id": "im_seed_moon",
+      "name": "月亮",
+      "aliases": [
+        "明月",
+        "玉盘",
+        "婵娟"
+      ],
+      "description": "夜空中的月体与月光。诗词中最常见的意象之一，有满月、残月、晓月、月华等多种形态，常见于登楼、夜饮、怀人、中秋等场景。",
+      "usages": [
+        {
+          "text": "寄托相思",
+          "kind": "pending"
+        },
+        {
+          "text": "象征团圆与缺憾",
+          "kind": "pending"
+        }
+      ],
+      "claims": [],
+      "citations": [],
+      "tags": [],
+      "note": "",
+      "mergedInto": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "revision": 1
+    }
+  ],
+  "imageryUses": [],
+  "allusions": [
+    {
+      "id": "al_seed_zhuangzhou",
+      "name": "庄周梦蝶",
+      "aliases": [
+        "梦蝶",
+        "庄生晓梦"
+      ],
+      "source": "《庄子·齐物论》",
+      "original": "昔者庄周梦为胡蝶，栩栩然胡蝶也……俄然觉，则蘧蘧然周也。不知周之梦为胡蝶与，胡蝶之梦为周与？",
+      "explanation": "庄子梦见自己化为蝴蝶，醒后分不清是庄周梦蝶还是蝶梦庄周，借以讨论物我界限与人生如梦。后世常用表达虚实难辨、人生如梦的怅惘。",
+      "usages": [
+        {
+          "text": "抒发人生如梦之感",
+          "kind": "pending"
+        },
+        {
+          "text": "表达物我两忘的境界",
+          "kind": "pending"
+        }
+      ],
+      "claims": [],
+      "citations": [],
+      "tags": [
+        "哲思",
+        "梦境"
+      ],
+      "note": "",
+      "mergedInto": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "revision": 1
+    }
+  ],
+  "allusionUses": []
+}
