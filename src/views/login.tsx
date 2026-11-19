@@ -29,6 +29,8 @@ export function Login() {
     setError('');
     try {
       await api.login(username, password);
+      // 会话 Cookie 不回传用户名：按约定键记录，「我的」页账号卡读取（Task 34 裁定）
+      localStorage.setItem('cn:username', username);
       navigate('/');
       // 登录态切换信号：外壳监听后刷新登录态与视图数据（Task 34 消费）
       window.dispatchEvent(new Event('cn:auth'));

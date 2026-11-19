@@ -1,28 +1,373 @@
-import {useState,useEffect} from 'react';
-import {BookOpen,PenLine,Columns2,History,Search,Plus,ArrowUpRight,Download,Feather,Lock,LogOut} from 'lucide-react';
-import {seeds,Note} from './seed';
-type Row={seq:number,id:string,data:string,created:string};
-const fields:[keyof Note,string][]=[['title','作品 / 文章名称'],['author','作者'],['tune','词牌'],['theme','主题（顿号分隔）'],['original','词作原文'],['background','简短背景'],['body','随笔正文'],['appendix','附记'],['sources','引用出处（书名、页码或网址）'],['evidence','资料核实说明'],['scene','人物情境'],['imagery','意象'],['allusion','典故'],['expression','表达方式'],['change','本次修改说明']];
-export default function Home(){const [rows,setRows]=useState<Row[]>([]),[view,setView]=useState('书架'),[selected,setSelected]=useState<Note|null>(null),[edit,setEdit]=useState(false),[q,setQ]=useState(''),[filter,setFilter]=useState<Record<string,string>>({}),[msg,setMsg]=useState('正在连接服务器…'),[ready,setReady]=useState(false),[saving,setSaving]=useState(false),[pair,setPair]=useState(['liuyong-2','zhou-1']),[tab,setTab]=useState('随笔'),[baseSeq,setBaseSeq]=useState(0),[authed,setAuthed]=useState<boolean|null>(null),[loginUser,setLoginUser]=useState(''),[loginPass,setLoginPass]=useState(''),[loggingIn,setLoggingIn]=useState(false),[confirmBox,setConfirmBox]=useState<{message:string,resolve:(ok:boolean)=>void}|null>(null);
-useEffect(()=>{if(!edit)return;const guard=(e:BeforeUnloadEvent)=>{e.preventDefault();};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard);},[edit]);
-useEffect(()=>{fetch('/api/notes').then(async r=>{if(r.status===401){setMsg('');setAuthed(false);return;}if(!r.ok)throw Error();setRows(await r.json());setReady(true);setMsg('服务器已连接');setAuthed(true);}).catch(()=>setMsg('服务器暂不可用 · 请刷新重试'));},[]);
-const notes=Object.values(rows.reduce((a,r)=>({...a,[r.id]:JSON.parse(r.data)}),Object.fromEntries(seeds.map(n=>[n.id,n])))) as Note[];
-const filtered=notes.filter(n=>Object.entries(filter).every(([k,v])=>!v||String(n[k as keyof Note]).includes(v))&&[n.title,n.author,n.body,n.original,n.theme].join(' ').includes(q));
-const open=(n:Note)=>{setSelected({...n});setBaseSeq(rows.filter(r=>r.id===n.id).at(-1)?.seq??0);setEdit(false);setTab('随笔');};
-const save=async()=>{if(!selected||saving)return;setSaving(true);try{const r=await fetch('/api/notes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...selected,expectedSeq:baseSeq})});if(r.status===401){setMsg('登录已过期，请重新登录');setAuthed(false);return;}const b=await r.json() as Row & {error?:string};if(!r.ok)throw Error(b.error);setRows(a=>[...a,b]);setBaseSeq(b.seq);setEdit(false);setMsg('已保存新版本 · '+new Date().toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai'}));}catch(e){setMsg(String(e));}finally{setSaving(false);}};
-const exportData=async()=>{try{const r=await fetch('/api/export');if(r.status===401){setMsg('登录已过期，请重新登录');setAuthed(false);return;}if(!r.ok)throw Error('导出失败，请稍后重试');const blob=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='词间-完整备份.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}catch(e){setMsg(String(e));}};
-const leave=()=>{if(!edit)return Promise.resolve(true);return new Promise<boolean>(resolve=>setConfirmBox({message:'离开会丢弃尚未保存的编辑，继续吗？',resolve}));};
-const closeConfirm=(ok:boolean)=>{confirmBox?.resolve(ok);setConfirmBox(null);};
-useEffect(()=>{if(!confirmBox)return;const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape')closeConfirm(false);};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);},[confirmBox]);
-const login=async()=>{if(!loginUser||!loginPass||loggingIn)return;setLoggingIn(true);try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:loginUser,password:loginPass})});if(!r.ok){setMsg(r.status===401?'用户名或密码不正确':'登录失败，请稍后重试');return;}setLoginUser('');setLoginPass('');const d=await fetch('/api/notes');if(!d.ok)throw Error();setRows(await d.json());setReady(true);setMsg('服务器已连接');setAuthed(true);}catch{setMsg('登录失败，请稍后重试');}finally{setLoggingIn(false);}};
-const logout=async()=>{try{await fetch('/api/logout',{method:'POST'});}catch{}setRows([]);setReady(false);setSelected(null);setEdit(false);setMsg('');setAuthed(false);};
+/**
+ * 应用外壳：登录态三态（检测中 / 未登录 / 已登录）、哈希路由分发、词间同款
+ * 导航（桌面侧栏 + 移动端顶栏 / 底栏 / 抽屉）与 Toast 容器。
+ *
+ * 语义照词间 web/app.js buildShell：
+ *   - 未登录只渲染登录页，不生成任何菜单 DOM（body.cj-no-nav 再兜一层隐藏）；
+ *   - 登录态切换不靠路由猜测：启动用 api.stats() 探测，之后监听
+ *     cn:auth（Login 登录成功派发）与 cn:unauthorized（api 层 401 派发）；
+ *   - 路由分发按 brief 的 renderRoute 骨架，路径参数取 r.parts；
+ *   - Home 以 navSeq（hashchange 计数）作 key：返回书架时强制重挂、重新拉数据；
+ *   - 抽屉为独立结构（cj-drawer / cj-scrim），打开时锁背景滚动，Esc / 遮罩 / 跳转关闭。
+ */
+import { useEffect, useState } from 'react';
+import { api } from './api';
+import { navigate, useHashRoute } from './router';
+import type { RouteMatch } from './router';
+import { ErrorBoundary, ToastHost, notifyToast } from './components/ui';
+import { Home } from './views/home';
+import { Login } from './views/login';
+import { WorksList, WorkDetail, WorkEdit } from './views/works';
+import { NotesList, NoteDetail, NoteEdit } from './views/notes';
+import { HistoryList, HistoryCompare } from './views/history';
+import { CompareList, ComparePick, CompareDetail } from './views/compare';
+import { ImageryList, ImageryDetail, ImageryEdit } from './views/imagery';
+import { AllusionList, AllusionDetail, AllusionEdit } from './views/allusions';
+import { Me, TrashView } from './views/me';
+import { McpKeys } from './views/mcpkeys';
 
-return <div className="shell">{authed!==false&&<aside><a className="brand" href="/">词间<span>CI JIAN</span></a><p className="aside-caption">诗词与寻常心事</p><nav>{[[BookOpen,'书架'],[PenLine,'写作进度'],[Columns2,'词作对照'],[History,'修改记录']].map(([Icon,name]:any)=><button key={name} className={view===name?'active':''} onClick={async()=>{if(await leave()){setView(name);setSelected(null);setEdit(false);}}}><Icon size={18}/>{name}</button>)}</nav><div className="shelf-note"><Feather size={25}/><p>读词，偶有所感。<br/>不急着说尽，慢慢写。</p></div><button className="backup" onClick={exportData}><Download size={16}/> 导出全部文字</button><button className="backup" onClick={logout}><LogOut size={16}/> 退出登录</button><small><Lock size={12}/> 私人写作空间</small></aside>}<main className={authed===false?'full':''}>{authed===false?<div className="login"><form className="login-card" onSubmit={e=>{e.preventDefault();login();}}><div className="login-brand">词间<span>CI JIAN</span></div><p>诗词与寻常心事</p><label>用户名<input autoFocus value={loginUser} onChange={e=>setLoginUser(e.target.value)}/></label><label>密码<input type="password" value={loginPass} onChange={e=>setLoginPass(e.target.value)}/></label>{msg&&<p className="login-error">{msg}</p>}<button className="primary" disabled={loggingIn||!loginUser||!loginPass}>{loggingIn?'登录中…':'登录'}</button></form><p className="login-foot">私人写作空间 · 请先登录</p></div>:<><header><span>我的诗词札记 <i>/</i> {selected?'阅读与修改':view}</span><span className="sync"><span className={ready?'dot':'dot amber'}/>{msg}</span></header>
-{!selected&&<><section className="intro"><div className="eyebrow">READ, THINK & WRITE</div><h1>{view==='书架'?'在词句之间，留一点自己的话。':view==='词作对照'?'把两首词，放在一起读。':view==='写作进度'?'一篇一篇，慢慢写好。':'每一次修改，都有来处。'}</h1><p>读过的词，写下的念头，还有暂时没有想明白的地方。</p><button className="primary" onClick={()=>{setBaseSeq(0);setSelected({...seeds[0],id:(typeof crypto.randomUUID==='function'?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('')),title:'',author:'',tune:'',theme:'',original:'',background:'',body:'',appendix:'',sources:'',evidence:'待核实',scene:'',imagery:'',allusion:'',expression:'',status:'草稿',change:'新建札记'});setEdit(true);}}><Plus size={17}/> 新建札记</button></section>
-{view==='书架'&&<><div className="feature"><div><span className="eyebrow">正在读 · 本期专题</span><h2>从帘外的清歌，到楼上的春色</h2><p>柳永《凤栖梧》三阕 · 周邦彦《浣溪沙》</p><button onClick={()=>{setView('词作对照');setPair(['liuyong-2','zhou-1']);}}>看看两种登楼心事 <ArrowUpRight size={16}/></button></div><div className="verse">新笋已成堂下竹<br/>落花都上燕巢泥<span>周邦彦 · 浣溪沙</span></div><div className="seal">读词</div></div><div className="section-head"><h2>我的书架 <small>{notes.length} 篇</small></h2><label className="search"><Search size={17}/><input aria-label="搜索" placeholder="搜索词句、作者、随笔…" value={q} onChange={e=>setQ(e.target.value)}/></label></div><div className="filters">{[['author','作者'],['tune','词牌'],['title','作品'],['theme','主题'],['status','写作状态']].map(([k,l])=><select aria-label={l} key={k} value={filter[k]||''} onChange={e=>setFilter({...filter,[k]:e.target.value})}><option value="">全部{l}</option>{Array.from(new Set(notes.flatMap(n=>k==='theme'?n.theme.split('、'):[n[k as keyof Note]]))).filter(Boolean).map(s=><option key={s}>{s}</option>)}</select>)}<button onClick={()=>{setFilter({});setQ('');}}>重置</button></div><div className="cards">{filtered.map((n,i)=><button className="card" key={n.id} onClick={()=>open(n)}><div className="card-top"><span>{n.author} <i> / </i> {n.tune}</span><em>{n.status}</em></div><h3>{n.title}</h3><p>{n.original?n.original.split('。')[0]+'。':n.background}</p><div className="card-foot"><span>{n.theme.split('、').slice(0,2).join(' · ')}</span><ArrowUpRight size={18}/></div></button>)}</div>{!filtered.length&&<p className="empty">还没有符合条件的札记，试试其他筛选。</p>}<p className="fine">原文、史料与个人读法分开记录。未取得的定稿正文留空，不以新写文字代替。</p></>}
-{view==='词作对照'&&<><div className="compare-select">{pair.map((id,i)=><select aria-label={'对照作品'+(i+1)} key={i} value={id} onChange={e=>setPair(pair.map((v,j)=>i===j?e.target.value:v))}>{notes.map(n=><option key={n.id} value={n.id}>{n.author} · {n.title}</option>)}</select>)}</div><p className="fine">对照中的情境和表达分析为阅读提示，属于个人理解；典故待核实项不会作为已确认事实。</p><div className="compare">{[['original','词作原文'],['scene','人物情境'],['imagery','意象'],['allusion','典故与出处'],['expression','表达方式'],['evidence','资料状态']].map(([k,l])=><section key={k}><h3>{l}</h3><div>{pair.map((id,i)=><p key={i}>{notes.find(n=>n.id===id)?.[k as keyof Note]||'尚未记录'}</p>)}</div></section>)}</div></>}
-{view==='写作进度'&&<div className="board">{['待写','资料收集','待导入','草稿','定稿','已发布'].map(s=><section key={s}><h3>{s} <small>{notes.filter(n=>n.status===s).length}</small></h3>{notes.filter(n=>n.status===s).map(n=><button onClick={()=>open(n)} key={n.id}><span>{n.author} · {n.tune}</span><h4>{n.title}</h4><small>{n.publication}</small></button>)}</section>)}</div>}
-{view==='修改记录'&&<div className="history">{rows.length===0?<p className="empty">还没有修改记录。保存札记后，每个版本都会保留在这里。</p>:[...rows].reverse().map(r=>{const n=JSON.parse(r.data);return <button key={r.seq} onClick={()=>open(n)}><History size={18}/><div><h3>{n.title}</h3><p>{n.change||'保存修改'} · {n.status}</p></div><small>{new Date(r.created).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'})}<br/>版本 #{r.seq}</small></button>})}</div>}</>}
-{selected&&<div className="detail"><button className="back" onClick={async()=>{if(await leave()){setSelected(null);setEdit(false);}}}>← 返回{view}</button><div className="detail-heading"><div><span className="eyebrow">{selected.author} · {selected.tune}</span><h1>{selected.title||'新的阅读札记'}</h1></div>{edit?<button className="primary" disabled={!ready||saving} onClick={save}>{saving?'保存中…':'保存为新版本'}</button>:<button className="primary" onClick={()=>{setEdit(true);setSelected({...selected,status:['定稿','已发布'].includes(selected.status)?'草稿':selected.status,publication:'未发布',change:'基于当前版本继续修改'});}}><PenLine size={16}/> {['定稿','已发布'].includes(selected.status)?'从此版新建草稿':'编辑札记'}</button>}</div><div className="notice"><Lock size={16}/> 每次保存均新增版本。已定稿和已发布版本保持原样；“发布状态”只作记录，不会自动向博客发布。</div>
-{edit?<div className="editor"><div className="editor-status"><label>写作状态<select value={selected.status} onChange={e=>setSelected({...selected,status:e.target.value})}>{['待写','资料收集','待导入','草稿','定稿','已发布'].map(s=><option key={s}>{s}</option>)}</select></label><label>发布状态<select value={selected.publication} onChange={e=>setSelected({...selected,publication:e.target.value})}>{['未发布','待发布','已发布'].map(s=><option key={s}>{s}</option>)}</select></label></div>{fields.map(([k,l])=><label key={k}>{l}{['title','author','tune','theme','change'].includes(k)?<input value={selected[k]} onChange={e=>setSelected({...selected,[k]:e.target.value})}/>:<textarea rows={k==='body'?12:4} value={selected[k]} placeholder={k==='body'?'用自己的话慢慢写。未取得的定稿，请粘贴原文后保存。':'尚未记录'} onChange={e=>setSelected({...selected,[k]:e.target.value})}/>}</label>)}</div>:<><div className="tabs">{['随笔','原文与资料','修改版本'].map(t=><button className={tab===t?'chosen':''} key={t} onClick={()=>setTab(t)}>{t}</button>)}</div>{tab==='随笔'&&<article><div className="labels"><em>{selected.status}</em><em>{selected.publication}</em></div>{selected.body?<p>{selected.body}</p>:<div className="empty">{selected.status==='待导入'?'这篇随笔已完成，等待导入你的完整原稿。':'留一页空白，等下一次读到这里。'}<br/><small>点击“编辑札记”开始记录。</small></div>}{selected.appendix&&<><h3>附记</h3><p>{selected.appendix}</p></>}<div className="note"><h4>关于这篇札记</h4><p>{selected.evidence}</p></div></article>}{tab==='原文与资料'&&<article>{[['original','原文'],['background','简短背景'],['evidence','核实状态'],['sources','引用出处']].map(([k,l])=><section key={k}><h3>{l}</h3><p>{selected[k as keyof Note]||'尚未记录'}</p>{k==='sources'&&(selected.sources.match(/https?:\/\/\S+/g)||[]).map(u=><a href={u} key={u} target="_blank" rel="noreferrer">打开引用来源 ↗</a>)}</section>)}</article>}{tab==='修改版本'&&<article><p className="fine">查看旧版不会覆盖当前版。要采纳旧稿，请编辑后另存新版本。</p>{[...rows].reverse().filter(r=>r.id===selected.id).map(r=><button className="version" key={r.seq} onClick={()=>{setSelected(JSON.parse(r.data));setBaseSeq(rows.filter(v=>v.id===r.id).at(-1)?.seq??0);setTab('随笔');}}><span>版本 #{r.seq} · {JSON.parse(r.data).change}</span><small>{new Date(r.created).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'})}</small></button>)}{seeds.find(n=>n.id===selected.id)&&<button className="version" onClick={()=>{setSelected({...seeds.find(n=>n.id===selected.id)!});setTab('随笔');}}>查看初始整理版 · 2026-11-10</button>}</article>}</> }</div>}
-<footer><span>词间</span> 一首词，可以读很多次。<span>自然 · 简洁 · 有据可查</span></footer></>}{confirmBox&&<div className="modal-mask" onClick={()=>closeConfirm(false)}><div className="modal" role="dialog" aria-modal="true" onClick={e=>e.stopPropagation()}><h3>未保存的修改</h3><p>{confirmBox.message}</p><div className="modal-actions"><button className="primary" autoFocus onClick={()=>closeConfirm(false)}>继续编辑</button><button className="danger" onClick={()=>closeConfirm(true)}>离开</button></div></div></div>}</main></div>}
+/* ------------------------------------------------------------------ */
+/* 常量                                                                */
+/* ------------------------------------------------------------------ */
+
+/** 阅读字号七档：与 Me 视图（views/me.tsx）同源，缺省 17px 同 styles.css */
+const FONT_SIZES = [15, 16, 17, 18, 20, 22, 24];
+
+/** 导航主项：key 与 hash（词间 NAV_ITEMS 基础上补典故项） */
+const NAV_ITEMS = [
+  { key: 'home', label: '书架', hash: '#/' },
+  { key: 'works', label: '词作', hash: '#/works' },
+  { key: 'notes', label: '札记', hash: '#/notes' },
+  { key: 'compare', label: '对照', hash: '#/compare' },
+  { key: 'imagery', label: '意象', hash: '#/imagery' },
+  { key: 'allusions', label: '典故', hash: '#/allusions' },
+  { key: 'me', label: '我的', hash: '#/me' },
+];
+
+/** 移动底栏保留的四项（词间 TAB_KEYS） */
+const TAB_KEYS = ['home', 'works', 'notes', 'me'];
+
+/** 「我的」子项：侧栏与抽屉在「我的」之后缩进一级列出 */
+const ME_SUB_ITEMS = [
+  { key: 'trash', label: '回收站', hash: '#/me/trash' },
+  { key: 'mcp-keys', label: 'MCP 密钥', hash: '#/me/mcp-keys' },
+];
+
+/** 导出文件名：与服务端 Content-Disposition 一致（Me 视图同款） */
+const EXPORT_FILENAME = 'ci-notes-backup.json';
+
+/* ------------------------------------------------------------------ */
+/* 启动副作用：阅读字号                                                 */
+/* ------------------------------------------------------------------ */
+
+/** 启动时应用存储的阅读字号（Me 页只负责点击时写 localStorage） */
+function applyStoredFontSize() {
+  const n = parseInt(localStorage.getItem('cn:fontSize') ?? '', 10);
+  if (FONT_SIZES.includes(n)) {
+    document.documentElement.style.setProperty('--reading-size', n + 'px');
+  }
+}
+applyStoredFontSize();
+
+/* ------------------------------------------------------------------ */
+/* 路由                                                                */
+/* ------------------------------------------------------------------ */
+
+/** 由路由首段推导导航高亮键：me 的子路由都算「我的」，未知路由不高亮 */
+function navKeyOf(r: RouteMatch): string {
+  switch (r.parts[0]) {
+    case undefined:
+      return 'home';
+    case 'home':
+    case 'works':
+    case 'notes':
+    case 'compare':
+    case 'imagery':
+    case 'allusions':
+    case 'me':
+      return r.parts[0];
+    default:
+      return '';
+  }
+}
+
+/** 路由分发（brief 骨架按实际组件签名适配）：路径参数取 r.parts */
+function renderRoute(r: RouteMatch, navSeq: number) {
+  const head: string | undefined = r.parts[0];
+  const a = r.parts[1];
+  const b = r.parts[2];
+  switch (head) {
+    case undefined:
+      return <Home key={navSeq} />;
+    case 'works':
+      return !a ? <WorksList /> : a === 'new' ? <WorkEdit /> : b === 'edit' ? <WorkEdit id={a} /> : <WorkDetail id={a} />;
+    case 'notes':
+      return !a ? (
+        <NotesList />
+      ) : a === 'new' ? (
+        <NoteEdit />
+      ) : b === 'edit' ? (
+        <NoteEdit id={a} />
+      ) : b === 'history' ? (
+        r.parts[3] ? <HistoryCompare id={a} a={r.parts[3]} b={r.parts[4]} /> : <HistoryList id={a} />
+      ) : (
+        <NoteDetail id={a} />
+      );
+    case 'compare':
+      return !a ? <CompareList /> : a === 'new' ? <ComparePick /> : <CompareDetail id={a} />;
+    case 'imagery':
+      return !a ? <ImageryList /> : a === 'new' ? <ImageryEdit /> : b === 'edit' ? <ImageryEdit id={a} /> : <ImageryDetail id={a} />;
+    case 'allusions':
+      return !a ? <AllusionList /> : a === 'new' ? <AllusionEdit /> : b === 'edit' ? <AllusionEdit id={a} /> : <AllusionDetail id={a} />;
+    case 'me':
+      return a === 'trash' ? <TrashView /> : a === 'mcp-keys' ? <McpKeys /> : <Me />;
+    default:
+      return <Home key={navSeq} />;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 外壳                                                                */
+/* ------------------------------------------------------------------ */
+
+/** 当前是否在登录路由：登录页自身的 401（密码错误）触发的 cn:unauthorized 豁免 */
+function onLoginRoute(): boolean {
+  return location.hash.slice(1).split('/').filter(Boolean)[0] === 'login';
+}
+
+export default function App() {
+  /** null=检测中；登录态由启动探测与事件驱动，不靠路由猜测 */
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  const route = useHashRoute();
+  /** hashchange 计数：作 Home 的 key，返回书架时强制重挂以重新拉数据 */
+  const [navSeq, setNavSeq] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  /* 启动探测登录态：成功→已登录；401→登录页（api 层同时派发 cn:unauthorized） */
+  useEffect(() => {
+    let alive = true;
+    api.stats().then(
+      () => {
+        if (alive) setAuthed(true);
+      },
+      () => {
+        if (alive) setAuthed(false);
+      },
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  /* 登录成功信号（Login 视图派发） */
+  useEffect(() => {
+    const onAuth = () => setAuthed(true);
+    window.addEventListener('cn:auth', onAuth);
+    return () => window.removeEventListener('cn:auth', onAuth);
+  }, []);
+
+  /* 会话过期信号（api 层派发）；登录路由上的 401 豁免，避免重复渲染登录态 */
+  useEffect(() => {
+    const onUnauthorized = () => {
+      if (onLoginRoute()) return;
+      setAuthed(false);
+    };
+    window.addEventListener('cn:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('cn:unauthorized', onUnauthorized);
+  }, []);
+
+  /* 路由切换：Home 重挂计数、回页首、收起抽屉 */
+  useEffect(() => {
+    const on = () => {
+      setNavSeq((n) => n + 1);
+      setDrawerOpen(false);
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener('hashchange', on);
+    return () => window.removeEventListener('hashchange', on);
+  }, []);
+
+  /* 抽屉打开时锁背景滚动，Esc 关闭 */
+  useEffect(() => {
+    document.body.classList.toggle('cj-drawer-lock', drawerOpen);
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDrawerOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drawerOpen]);
+
+  /* body.cj-no-nav：登录 / 检测态兜底隐藏菜单（词间 buildShell 同款保险） */
+  useEffect(() => {
+    document.body.classList.toggle('cj-no-nav', authed !== true);
+  }, [authed]);
+
+  async function logout() {
+    try {
+      await api.logout();
+    } catch {
+      // 会话已失效也照常回到登录页
+    }
+    localStorage.removeItem('cn:username');
+    navigate('/');
+    setAuthed(false);
+  }
+
+  /** 抽屉快捷导出：与 Me 页备份同款下载流程 */
+  async function exportAll() {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const res = await fetch(api.backup.exportUrl);
+      if (res.status === 401) {
+        setAuthed(false);
+        return;
+      }
+      if (!res.ok) throw new Error('导出失败，请稍后重试');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = EXPORT_FILENAME;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      notifyToast(e instanceof Error ? e.message : '导出失败，请稍后重试');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  /* ---------------- 三态渲染 ---------------- */
+
+  if (authed === null) {
+    return (
+      <div className="cj-app cj-app-auth">
+        <div className="cj-content">
+          <div className="cj-boot">正在进入词间…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (authed === false) {
+    /* 未登录：登录页是独立界面，不渲染任何菜单 DOM */
+    return (
+      <div className="cj-app cj-app-auth">
+        <div className="cj-content">
+          <Login />
+        </div>
+      </div>
+    );
+  }
+
+  const key = navKeyOf(route);
+  const active = NAV_ITEMS.find((x) => x.key === key) ?? null;
+  /* 不在底栏的分区（对照 / 意象 / 典故），顶栏显示当前位置 */
+  const whereOn = !TAB_KEYS.includes(key) && !!active;
+  const meSub = route.parts[0] === 'me' ? route.parts[1] ?? '' : '';
+
+  const drawerLink = (item: { key: string; label: string; hash: string }) => (
+    <a
+      key={item.key}
+      className={'cj-navlink cj-drawerlink' + (key === item.key || meSub === item.key ? ' cj-nav-on' : '')}
+      href={item.hash}
+      onClick={() => setDrawerOpen(false)}
+    >
+      <span className="cj-navdot" />
+      {item.label}
+    </a>
+  );
+
+  return (
+    <div className="cj-app">
+      {/* 桌面侧栏（≥900px 常驻） */}
+      <aside className="cj-sidebar">
+        <div className="cj-brand">
+          <span className="cj-brand-mark cj-serif">词间</span>
+          <span className="cj-brand-sub">古典诗词阅读札记</span>
+        </div>
+        <nav className="cj-sidenav">
+          {NAV_ITEMS.map((item) => (
+            <a key={item.key} className={'cj-navlink' + (key === item.key ? ' cj-nav-on' : '')} href={item.hash}>
+              <span className="cj-navdot" />
+              {item.label}
+            </a>
+          ))}
+          {ME_SUB_ITEMS.map((item) => (
+            <a
+              key={item.key}
+              className={'cj-navlink' + (meSub === item.key ? ' cj-nav-on' : '')}
+              href={item.hash}
+              style={{ paddingLeft: 28 }}
+            >
+              <span className="cj-navdot" />
+              {item.label}
+            </a>
+          ))}
+        </nav>
+        <button type="button" className="cj-navlink" style={{ marginTop: 'auto' }} onClick={logout}>
+          <span className="cj-navdot" />
+          退出登录
+        </button>
+      </aside>
+
+      {/* 移动端抽屉（<900px；桌面隐藏） */}
+      <aside className={'cj-drawer' + (drawerOpen ? ' cj-drawer-open' : '')} aria-hidden={!drawerOpen}>
+        <div className="cj-drawer-head">
+          <span className="cj-brand-mark cj-serif">词间</span>
+          <button type="button" className="cj-drawer-close" aria-label="收起菜单" onClick={() => setDrawerOpen(false)}>
+            ×
+          </button>
+        </div>
+        <nav className="cj-sidenav cj-drawer-nav">
+          {NAV_ITEMS.map(drawerLink)}
+          {ME_SUB_ITEMS.map(drawerLink)}
+        </nav>
+        <div className="cj-drawer-foot">
+          <button type="button" className="cn-btn cn-btn-ghost cn-btn-sm" disabled={exporting} onClick={exportAll}>
+            {exporting ? '导出中…' : '导出'}
+          </button>
+          <button type="button" className="cn-btn cn-btn-quiet cn-btn-sm" onClick={logout}>
+            退出
+          </button>
+        </div>
+      </aside>
+      <div className={'cj-scrim' + (drawerOpen ? ' cj-scrim-on' : '')} onClick={() => setDrawerOpen(false)} />
+
+      <div className="cj-content">
+        {/* 顶栏（移动端）：菜单按钮 + 品牌 + 当前位置 */}
+        <header className="cj-topbar">
+          <div className="cj-topbar-left">
+            <button type="button" className="cj-menubtn" aria-label="展开菜单" onClick={() => setDrawerOpen(true)}>
+              <span className="cj-menubtn-bars" />
+            </button>
+            <div className="cj-topbar-brand cj-serif">词间</div>
+            <span className={'cj-topbar-where' + (whereOn ? ' cj-topbar-where-on' : '')}>
+              {whereOn ? active?.label : ''}
+            </span>
+          </div>
+          <div className="cj-topbar-right" />
+        </header>
+
+        <main className="cj-view">
+          <ErrorBoundary>{renderRoute(route, navSeq)}</ErrorBoundary>
+        </main>
+      </div>
+
+      {/* 移动底栏四项 */}
+      <nav className="cj-tabbar">
+        {NAV_ITEMS.filter((x) => TAB_KEYS.includes(x.key)).map((item) => (
+          <a key={item.key} className={'cj-tablink' + (key === item.key ? ' cj-nav-on' : '')} href={item.hash}>
+            <span className="cj-tabdot" />
+            {item.label}
+          </a>
+        ))}
+      </nav>
+
+      <ToastHost />
+    </div>
+  );
+}
