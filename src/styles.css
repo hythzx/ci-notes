@@ -1652,3 +1652,30 @@ body.cj-no-nav .cj-content,
 }
 .cn-linkbtn:hover { color: var(--green); }
 .cn-linkbtn-strong { color: var(--green); }
+
+/* ---------------- 移动端适配增强 ----------------
+   手机上辅助文字（按钮 13px / 底栏 12px / 出处 12px）偏小、底栏与悬浮保存栏
+   遮挡内容、页头标题被 space-between 甩到最右。集中在此按 ≤899px 调整。 */
+@media (max-width: 899px) {
+  /* 排版尺度整体上调一档（用户自设过阅读字号的，内联值优先，不受影响） */
+  :root { --reading-size: 19px; }
+  body { font-size: 16px; }
+  .cj-claim-text { font-size: 15.5px; }
+  .cj-claim-cite { font-size: 13px; }
+  .cj-stat-label { font-size: 12.5px; letter-spacing: 0.5px; }
+  .cj-tablink { font-size: 13px; }
+  .cn-btn { font-size: 14px; padding: 9px 18px; }
+
+  /* 统计卡一行 6 项太挤：折成两行三列 */
+  .cj-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 0; }
+
+  /* 底栏（fixed）不再压住列表末尾 */
+  .cj-content { padding-bottom: 120px; }
+
+  /* 悬浮保存栏（fixed, bottom:62px）不再盖住表单底部：
+     含保存栏的页面在内容末尾留出 保存栏+底栏 的高度 */
+  .cj-page:has(.cj-savebar) { padding-bottom: 150px; }
+
+  /* 页头：面包屑与标题纵向排列，标题不再被甩到最右 */
+  .cj-pagehead { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
