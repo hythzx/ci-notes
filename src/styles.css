@@ -1657,14 +1657,16 @@ body.cj-no-nav .cj-content,
    手机上辅助文字（按钮 13px / 底栏 12px / 出处 12px）偏小、底栏与悬浮保存栏
    遮挡内容、页头标题被 space-between 甩到最右。集中在此按 ≤899px 调整。 */
 @media (max-width: 899px) {
-  /* 排版尺度整体上调一档（用户自设过阅读字号的，内联值优先，不受影响） */
-  :root { --reading-size: 19px; }
-  body { font-size: 16px; }
-  .cj-claim-text { font-size: 15.5px; }
-  .cj-claim-cite { font-size: 13px; }
-  .cj-stat-label { font-size: 12.5px; letter-spacing: 0.5px; }
-  .cj-tablink { font-size: 13px; }
-  .cn-btn { font-size: 14px; padding: 9px 18px; }
+  /* 排版尺度：正文 18px（默认 17px +1 档），基准与桌面一致 15px，
+     辅助文字保留 +0.5 档（初版整体上调一档后感觉偏大，2026-11-20 回调；
+     用户自设过阅读字号的，内联值优先，不受影响） */
+  :root { --reading-size: 18px; }
+  body { font-size: 15px; }
+  .cj-claim-text { font-size: 14.5px; }
+  .cj-claim-cite { font-size: 12.5px; }
+  .cj-stat-label { font-size: 12px; letter-spacing: 0.5px; }
+  .cj-tablink { font-size: 12.5px; }
+  .cn-btn { font-size: 13.5px; padding: 9px 18px; }
 
   /* 统计卡一行 6 项太挤：折成两行三列 */
   .cj-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 0; }
