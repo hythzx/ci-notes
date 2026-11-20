@@ -9,6 +9,7 @@
  * 徽章/时间/空态/节标题复用 components/ui 的 cn-* 组件。
  */
 import { useEffect, useState } from 'react';
+import { ArrowUpRight, Feather, NotebookPen, Columns2 } from 'lucide-react';
 import { api } from '../api';
 import { ApiError, type HomeData } from '../types';
 import { EmptyState, Section, StatusChip, notifyToast, relTime } from '../components/ui';
@@ -26,9 +27,9 @@ const STAT_ITEMS: { key: keyof HomeData['stats']; label: string }[] = [
 
 /** 快捷入口三卡：标题与说明文案逐字照词间 library.js actionCard */
 const QUICK_ACTIONS = [
-  { label: '写札记', desc: '接着上次的思路写', to: '/notes/new' },
-  { label: '收词作', desc: '诗与词，词牌可留空', to: '/works/new' },
-  { label: '作对照', desc: '两首并排看', to: '/compare/new' },
+  { label: '写札记', desc: '接着上次的思路写', to: '/notes/new', icon: NotebookPen, number: '01' },
+  { label: '收词作', desc: '诗与词，词牌可留空', to: '/works/new', icon: Feather, number: '02' },
+  { label: '作对照', desc: '两首并排看', to: '/compare/new', icon: Columns2, number: '03' },
 ];
 
 /** 写作偏好五条：逐字照搬词间 utils/constants.js WRITING_PREFERENCES */
@@ -81,13 +82,18 @@ export function Home() {
   const recent = home.recent;
 
   return (
-    <div className="cj-page">
-      <div className="cj-head">
-        <div className="cj-head-title cj-serif">词间</div>
-        <div className="cj-head-sub">整理词作，写下札记，看得见自己怎么改的。</div>
+    <div className="cj-page cj-home">
+      <div className="cj-home-hero">
+        <div className="cj-home-hero-copy">
+          <div className="cj-home-eyebrow"><span className="cj-home-line" /> 一方诗词，一方天地</div>
+          <h1 className="cj-head-title cj-serif">在词间，<br />安放片刻光阴。</h1>
+          <div className="cj-head-sub">读一首词，记一段心事。让喜欢的句子，慢慢有了去处。</div>
+          <button type="button" className="cj-hero-link" onClick={() => navigate('/works')}>去读词作 <ArrowUpRight size={17} /></button>
+        </div>
+        <div className="cj-home-hero-art" aria-hidden="true"><span>词</span><i /><small>CI JIAN · NOTES</small></div>
       </div>
 
-      <div className="cj-card cj-stats">
+      <div className="cj-card cj-stats" aria-label="书架统计">
         {STAT_ITEMS.map((x) => (
           <div className="cj-stat" key={x.key}>
             <span className="cj-stat-num">{s[x.key]}</span>
@@ -99,7 +105,8 @@ export function Home() {
       <div className="cj-actions">
         {QUICK_ACTIONS.map((a) => (
           <button type="button" className="cj-action" key={a.to} onClick={() => navigate(a.to)}>
-            <div className="cj-action-label">{a.label}</div>
+            <span className="cj-action-top"><a.icon size={21} strokeWidth={1.5} /><span>{a.number}</span></span>
+            <div className="cj-action-label">{a.label} <ArrowUpRight size={16} /></div>
             <div className="cj-action-desc">{a.desc}</div>
           </button>
         ))}
@@ -107,10 +114,10 @@ export function Home() {
 
       <Section title="最近改的札记" aside={<a href="#/notes">全部 ›</a>}>
         {recent.length ? (
-          <div className="cj-list">
+          <div className="cj-list cj-home-recent">
             {recent.map((n) => (
               <a className="cj-card cj-listitem" href={'#/notes/' + n.id} key={n.id}>
-                <div className="cj-item-title">{n.title}</div>
+                <div className="cj-item-title">{n.title}<ArrowUpRight size={17} className="cj-item-arrow" /></div>
                 <div className="cj-item-excerpt">{n.excerpt}</div>
                 <div className="cj-item-foot">
                   <StatusChip

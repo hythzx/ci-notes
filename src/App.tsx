@@ -11,6 +11,7 @@
  *   - 抽屉为独立结构（cj-drawer / cj-scrim），打开时锁背景滚动，Esc / 遮罩 / 跳转关闭。
  */
 import { useEffect, useState } from 'react';
+import { BookOpen, Feather, NotebookPen, Columns2, Flower2, ScrollText, UserRound, Trash2, KeyRound, LogOut, Menu, X } from 'lucide-react';
 import { api } from './api';
 import { navigate, useHashRoute } from './router';
 import type { RouteMatch } from './router';
@@ -35,13 +36,13 @@ const FONT_SIZES = [15, 16, 17, 18, 20, 22, 24];
 
 /** 导航主项：key 与 hash（词间 NAV_ITEMS 基础上补典故项） */
 const NAV_ITEMS = [
-  { key: 'home', label: '书架', hash: '#/' },
-  { key: 'works', label: '词作', hash: '#/works' },
-  { key: 'notes', label: '札记', hash: '#/notes' },
-  { key: 'compare', label: '对照', hash: '#/compare' },
-  { key: 'imagery', label: '意象', hash: '#/imagery' },
-  { key: 'allusions', label: '典故', hash: '#/allusions' },
-  { key: 'me', label: '我的', hash: '#/me' },
+  { key: 'home', label: '书架', hash: '#/', icon: BookOpen },
+  { key: 'works', label: '词作', hash: '#/works', icon: Feather },
+  { key: 'notes', label: '札记', hash: '#/notes', icon: NotebookPen },
+  { key: 'compare', label: '对照', hash: '#/compare', icon: Columns2 },
+  { key: 'imagery', label: '意象', hash: '#/imagery', icon: Flower2 },
+  { key: 'allusions', label: '典故', hash: '#/allusions', icon: ScrollText },
+  { key: 'me', label: '我的', hash: '#/me', icon: UserRound },
 ];
 
 /** 移动底栏保留的四项（词间 TAB_KEYS） */
@@ -49,8 +50,8 @@ const TAB_KEYS = ['home', 'works', 'notes', 'me'];
 
 /** 「我的」子项：侧栏与抽屉在「我的」之后缩进一级列出 */
 const ME_SUB_ITEMS = [
-  { key: 'trash', label: '回收站', hash: '#/me/trash' },
-  { key: 'mcp-keys', label: 'MCP 密钥', hash: '#/me/mcp-keys' },
+  { key: 'trash', label: '回收站', hash: '#/me/trash', icon: Trash2 },
+  { key: 'mcp-keys', label: 'MCP 密钥', hash: '#/me/mcp-keys', icon: KeyRound },
 ];
 
 /** 导出文件名：与服务端 Content-Disposition 一致（Me 视图同款） */
@@ -269,14 +270,14 @@ export default function App() {
   const whereOn = !TAB_KEYS.includes(key) && !!active;
   const meSub = route.parts[0] === 'me' ? route.parts[1] ?? '' : '';
 
-  const drawerLink = (item: { key: string; label: string; hash: string }) => (
+  const drawerLink = (item: typeof NAV_ITEMS[number]) => (
     <a
       key={item.key}
       className={'cj-navlink cj-drawerlink' + (key === item.key || meSub === item.key ? ' cj-nav-on' : '')}
       href={item.hash}
       onClick={() => setDrawerOpen(false)}
     >
-      <span className="cj-navdot" />
+      <item.icon size={18} strokeWidth={1.7} aria-hidden="true" />
       {item.label}
     </a>
   );
@@ -286,13 +287,14 @@ export default function App() {
       {/* 桌面侧栏（≥900px 常驻） */}
       <aside className="cj-sidebar">
         <div className="cj-brand">
-          <span className="cj-brand-mark cj-serif">词间</span>
+          <span className="cj-brand-mark cj-serif">词间<span className="cj-brand-seal">记</span></span>
           <span className="cj-brand-sub">古典诗词阅读札记</span>
         </div>
+        <div className="cj-nav-caption">阅读空间</div>
         <nav className="cj-sidenav">
           {NAV_ITEMS.map((item) => (
             <a key={item.key} className={'cj-navlink' + (key === item.key ? ' cj-nav-on' : '')} href={item.hash}>
-              <span className="cj-navdot" />
+              <item.icon size={18} strokeWidth={1.7} aria-hidden="true" />
               {item.label}
             </a>
           ))}
@@ -303,13 +305,13 @@ export default function App() {
               href={item.hash}
               style={{ paddingLeft: 28 }}
             >
-              <span className="cj-navdot" />
+              <item.icon size={18} strokeWidth={1.7} aria-hidden="true" />
               {item.label}
             </a>
           ))}
         </nav>
         <button type="button" className="cj-navlink" style={{ marginTop: 'auto' }} onClick={logout}>
-          <span className="cj-navdot" />
+          <LogOut size={18} strokeWidth={1.7} aria-hidden="true" />
           退出登录
         </button>
       </aside>
@@ -317,9 +319,9 @@ export default function App() {
       {/* 移动端抽屉（<900px；桌面隐藏） */}
       <aside className={'cj-drawer' + (drawerOpen ? ' cj-drawer-open' : '')} aria-hidden={!drawerOpen}>
         <div className="cj-drawer-head">
-          <span className="cj-brand-mark cj-serif">词间</span>
+          <span className="cj-brand-mark cj-serif">词间<span className="cj-brand-seal">记</span></span>
           <button type="button" className="cj-drawer-close" aria-label="收起菜单" onClick={() => setDrawerOpen(false)}>
-            ×
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
         <nav className="cj-sidenav cj-drawer-nav">
@@ -342,7 +344,7 @@ export default function App() {
         <header className="cj-topbar">
           <div className="cj-topbar-left">
             <button type="button" className="cj-menubtn" aria-label="展开菜单" onClick={() => setDrawerOpen(true)}>
-              <span className="cj-menubtn-bars" />
+              <Menu size={20} strokeWidth={1.7} aria-hidden="true" />
             </button>
             <div className="cj-topbar-brand cj-serif">词间</div>
             <span className={'cj-topbar-where' + (whereOn ? ' cj-topbar-where-on' : '')}>
@@ -361,7 +363,7 @@ export default function App() {
       <nav className="cj-tabbar">
         {NAV_ITEMS.filter((x) => TAB_KEYS.includes(x.key)).map((item) => (
           <a key={item.key} className={'cj-tablink' + (key === item.key ? ' cj-nav-on' : '')} href={item.hash}>
-            <span className="cj-tabdot" />
+            <item.icon size={20} strokeWidth={1.7} aria-hidden="true" />
             {item.label}
           </a>
         ))}
