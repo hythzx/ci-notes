@@ -27,7 +27,7 @@
 | 数据卷 | `ci-notes_ci-notes-data` 挂载于 `/app/data`，库文件 `ci-notes.sqlite`（WAL 模式，约 352KB） |
 | 备份脚本 | 容器内 `node scripts/backup.mjs [target]`（WORKDIR=/app），默认输出 `backups/ci-notes-<ISO时间戳>.sqlite`；目标已存在则报错退出 |
 | 1Panel 数据库 | `/opt/1panel/db/agent.db`（cronjobs、backup_accounts 表）；宿主机无 sqlite3 CLI，可用 `docker run --rm -v /opt/1panel/db:/db:ro node:24.22.1-bookworm-slim node -e "…"` 读取 |
-| 存储账号 | id=1 LOCAL「localhost」；id=2 MINIO「ZSpace」bucket `1panel`；id=3 WebDAV |
+| 存储账号 | id=1 LOCAL「localhost」；id=2 MINIO「ZSpace」bucket `backup`、backupPath `/1panel`；id=3 WebDAV（勘误：初稿误记 bucket 为 `1panel`，经 Task 2 实测修正） |
 | 健康检查 | `curl http://127.0.0.1:30136/api/health` → `{"ok":true}` |
 
 ---
