@@ -31,8 +31,8 @@ import { McpKeys } from './views/mcpkeys';
 /* 常量                                                                */
 /* ------------------------------------------------------------------ */
 
-/** 阅读字号七档：与 Me 视图（views/me.tsx）同源，缺省 17px 同 styles.css */
-const FONT_SIZES = [15, 16, 17, 18, 20, 22, 24];
+/** 阅读字号档位：与 Me 视图（views/me.tsx）同源，缺省 17px 同 styles.css */
+const FONT_SIZES = [13, 14, 15, 16, 17, 18, 20, 22, 24];
 
 /** 导航主项：key 与 hash（词间 NAV_ITEMS 基础上补典故项） */
 const NAV_ITEMS = [

@@ -36,8 +36,8 @@ import { TextArea } from '../components/editors';
 /* 常量                                                                */
 /* ------------------------------------------------------------------ */
 
-/** 字号七档与缺省值（styles.css --reading-size 缺省 17px 同源） */
-const FONT_SIZES = [15, 16, 17, 18, 20, 22, 24];
+/** 字号档位与缺省值（styles.css --reading-size 缺省 17px 同源；最小 13px） */
+const FONT_SIZES = [13, 14, 15, 16, 17, 18, 20, 22, 24];
 const FONT_DEFAULT = 17;
 const FONT_KEY = 'cn:fontSize';
 const USERNAME_KEY = 'cn:username';
