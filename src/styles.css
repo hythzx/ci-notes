@@ -1657,16 +1657,15 @@ body.cj-no-nav .cj-content,
    手机上辅助文字（按钮 13px / 底栏 12px / 出处 12px）偏小、底栏与悬浮保存栏
    遮挡内容、页头标题被 space-between 甩到最右。集中在此按 ≤899px 调整。 */
 @media (max-width: 899px) {
-  /* 排版尺度：正文 18px（默认 17px +1 档），基准与桌面一致 15px，
-     辅助文字保留 +0.5 档（初版整体上调一档后感觉偏大，2026-11-20 回调；
-     用户自设过阅读字号的，内联值优先，不受影响） */
-  :root { --reading-size: 18px; }
+  /* 排版尺度全面回桌面基准（2026-11-20 二次回调：初版整体上调一档，
+     用户反馈标题、按钮明显偏大）：正文用默认 17px，辅助文字回基准；
+     标题与按钮在此之上再单独降一档。用户自设过阅读字号的，
+     内联值优先，不受影响。 */
   body { font-size: 15px; }
-  .cj-claim-text { font-size: 14.5px; }
-  .cj-claim-cite { font-size: 12.5px; }
-  .cj-stat-label { font-size: 12px; letter-spacing: 0.5px; }
-  .cj-tablink { font-size: 12.5px; }
-  .cn-btn { font-size: 13.5px; padding: 9px 18px; }
+  .cj-btn, .cn-btn { font-size: 13px; padding: 7px 13px; }
+
+  /* 标题降一档的规则见文件末尾的移动端块（须位于下方 29px/18px
+     基准定义之后才能按源码顺序胜出） */
 
   /* 统计卡一行 6 项太挤：折成两行三列 */
   .cj-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 0; }
@@ -1810,9 +1809,13 @@ button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
   .cj-tablink { gap: 3px; }
   .cj-tablink.cj-nav-on { background: transparent; }
   .cj-page { padding: 23px 18px 40px; }
+  /* 标题降一档：手机上 29px 页题 / 18px 列表题过于占幅（2026-11-20） */
+  .cj-h1 { font-size: 22px; }
+  .cj-section-title, .cn-section-title { font-size: 16px; }
+  .cj-item-title { font-size: 16px; }
   .cj-home-hero { min-height: 250px; padding: 28px 24px; }
   .cj-home-hero-art { position: absolute; right: -35px; top: 10px; bottom: 0; opacity: .55; }
-  .cj-home .cj-head-title { font-size: clamp(28px, 7vw, 38px); }
+  .cj-home .cj-head-title { font-size: clamp(24px, 6.4vw, 30px); }
   .cj-home .cj-head-sub { max-width: 310px; line-height: 1.7; }
   .cj-home .cj-stats { grid-template-columns: repeat(3,1fr); gap: 0; padding: 12px 2px; }
   .cj-home .cj-stat { padding: 10px 0; }
