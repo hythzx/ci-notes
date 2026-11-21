@@ -5,9 +5,9 @@
  * 差异以 brief 为准：
  *   - 列表筛选用固定状态枚举（词间 constants 同款），不拉 stats facets；
  *     列表摘要 excerpt 由服务端截 80 字，本地只补截断省略号；
- *   - 阅读页段落标注：Md 的 onGroup 回调里做 DOM 挂载（段类名、点击监听、
- *     该段 claims 角标 chips），点击段落开 Modal 列出该段全部标注与出处，
- *     语义对齐词间 tapPara；
+ *   - 阅读页段落标注：Md 的 onGroup 回调里做 DOM 挂载（段类名、该段 claims
+ *     角标 chips、划选锚点虚线）；点击虚线弹单条标注 Modal。原「点段落弹
+ *     全段 Modal」已于 v2.1.1 按用户要求移除，段落级标注看角标与资料区；
  *   - 编辑草稿暂存 localStorage（key draft:note:*，词间经 store.putDraft），
  *     卸载不删，仅保存成功后清除；
  *   - 定稿/已发布保存 → 服务端派生草稿（createdDraft:true）→ ChooseBox
@@ -303,8 +303,8 @@ export function NotesList() {
 
 /**
  * 札记阅读（词间 views.noteDetail 语义）。
- * 段落标注：Md 渲染完成后在 onGroup 里给每个段落组挂类名、点击监听与
- * 该段 claims 角标；点击任意段落开 Modal 列出该段全部标注与出处。
+ * 段落标注：Md 渲染完成后在 onGroup 里给每个段落组挂类名、claims 角标与
+ * 划选锚点虚线；点击虚线弹单条标注 Modal。
  * 意象 / 典故区由 sections 组件提供。
  */
 export function NoteDetail({ id }: { id: string }) {
@@ -314,7 +314,6 @@ export function NoteDetail({ id }: { id: string }) {
   /** 撤销定稿 / 移入回收站的防重入标志（两个写操作共用） */
   const [busy, setBusy] = useState(false);
   const [confirmUnprotect, setConfirmUnprotect] = useState(false);
-  const [paraModal, setParaModal] = useState<number | null>(null);
   const [annotatePick, setAnnotatePick] = useState<SelectionPick | null>(null);
   const [markModal, setMarkModal] = useState<Claim | null>(null);
   /** 划选标注保存后若派生草稿（定稿/已发布），供 ChooseBox 跳转 */
@@ -376,12 +375,6 @@ export function NoteDetail({ id }: { id: string }) {
   function attachMarks(el: HTMLElement, group: number) {
     el.className = 'cj-para cj-md-group';
     el.dataset.group = String(group);
-    el.addEventListener('click', () => {
-      // 划选结束的 click（选区非空）不当段落点击
-      const sel = window.getSelection();
-      if (sel && !sel.isCollapsed) return;
-      setParaModal(group);
-    });
     const list = marks.get(group);
     if (list && list.length) {
       const box = document.createElement('div');
@@ -493,7 +486,6 @@ export function NoteDetail({ id }: { id: string }) {
 
   const n = detail.note;
   const hasContent = !!(n.content && n.content.trim());
-  const paraClaims = paraModal !== null ? marks.get(paraModal) ?? [] : [];
   const linkedWorks = detail.linkedWorks;
 
   return (
@@ -637,18 +629,6 @@ export function NoteDetail({ id }: { id: string }) {
       <Section title="典故">
         <AllusionSection targetType="note" targetId={n.id} />
       </Section>
-
-      {paraModal !== null ? (
-        <Modal title={'第 ' + (paraModal + 1) + ' 段'} onClose={() => setParaModal(null)}>
-          <div className="cj-card" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-            {paraClaims.length ? (
-              paraClaims.map((c) => <ClaimRow key={c.id} claim={c} />)
-            ) : (
-              <EmptyState text="这一段还没有资料标注。" />
-            )}
-          </div>
-        </Modal>
-      ) : null}
 
       {annotatePick ? (
         <AnnotateModal
