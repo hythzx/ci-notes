@@ -30,3 +30,25 @@ test('id 生成稳定', () => {
   assert.equal(derivedId('w_', 'a', 'b'), derivedId('w_', 'a', 'b'));
   assert.notEqual(derivedId('w_', 'a', 'b'), derivedId('w_', 'a', 'c'));
 });
+test('claims 锚点：quote 非空保留，prefix/suffix 各截 16 字', () => {
+  const [c] = normalizeClaims([{
+    text: '注',
+    paragraph: 0,
+    anchor: { quote: '  菩萨蛮  ', prefix: '一字一行一' + 'x'.repeat(20), suffix: '。' + 'y'.repeat(20) },
+  }]);
+  assert.equal(c.anchor.quote, '菩萨蛮');
+  assert.equal(c.anchor.prefix.length, 16);
+  assert.equal(c.anchor.suffix, '。' + 'y'.repeat(15));
+});
+
+test('claims 锚点：quote 为空或 anchor 非对象则丢弃', () => {
+  const [a] = normalizeClaims([{ text: 'x', anchor: { quote: '   ' } }]);
+  const [b] = normalizeClaims([{ text: 'x', anchor: 'nope' }]);
+  assert.equal(a.anchor, undefined);
+  assert.equal(b.anchor, undefined);
+});
+
+test('claims 锚点：旧数据无 anchor 字段不受影响', () => {
+  const [c] = normalizeClaims([{ text: '系年待查', paragraph: 2 }]);
+  assert.equal(c.anchor, undefined);
+});

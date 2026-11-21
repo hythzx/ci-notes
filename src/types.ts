@@ -25,12 +25,21 @@ export interface Citation {
   verified: ClaimKind;
 }
 
+/** 文字范围锚点：引文 + 前后文各 ≤16 字，用于详情页虚线定位（划选标注） */
+export interface ClaimAnchor {
+  quote: string;
+  prefix: string;
+  suffix: string;
+}
+
 export interface Claim {
   id: string;
   kind: ClaimKind;
   text: string;
   paragraph: number;
   citations: Citation[];
+  /** 有 anchor = 文字范围标注；无 = 整段 / 不挂段落（兼容旧数据） */
+  anchor?: ClaimAnchor;
   createdAt?: string;
   updatedAt?: string;
 }

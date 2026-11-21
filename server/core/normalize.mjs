@@ -107,6 +107,21 @@ export function normalizeCitations(list) {
   return out;
 }
 
+/** 锚点前后文取样长度（与前端 src/annotate.ts 的 ANCHOR_CONTEXT 一致） */
+const ANCHOR_CONTEXT = 16;
+
+/** 锚点归一化：quote 非空才保留整个 anchor，prefix/suffix 各截 16 字 */
+function normalizeAnchor(anchor) {
+  if (!anchor || typeof anchor !== 'object') return undefined;
+  const quote = typeof anchor.quote === 'string' ? anchor.quote.trim() : '';
+  if (!quote) return undefined;
+  return {
+    quote,
+    prefix: typeof anchor.prefix === 'string' ? anchor.prefix.slice(0, ANCHOR_CONTEXT) : '',
+    suffix: typeof anchor.suffix === 'string' ? anchor.suffix.slice(0, ANCHOR_CONTEXT) : ''
+  };
+}
+
 export function normalizeClaims(list) {
   if (!Array.isArray(list)) return [];
   const out = [];
@@ -119,12 +134,14 @@ export function normalizeClaims(list) {
       throw new StoreError('INVALID', '已核实的资料需要至少一条出处');
     }
     const paragraph = Number(c.paragraph);
+    const anchor = normalizeAnchor(c.anchor);
     out.push({
       id: c.id || newId('cl_'),
       kind,
       text: str(c.text),
       paragraph: Number.isInteger(paragraph) && paragraph >= -1 ? paragraph : -1,
       citations,
+      ...(anchor ? { anchor } : {}),
       createdAt: c.createdAt || nowIso(),
       updatedAt: c.updatedAt || nowIso()
     });
