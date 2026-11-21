@@ -3,7 +3,6 @@ import type { Note, Work } from '../types';
 import { notifyToast } from './ui';
 import './share-poster.css';
 
-type PosterTheme = 'mist' | 'paper' | 'night';
 type PosterSize = 'portrait' | 'square';
 type Source = { kind: 'work' | 'note'; title: string; subtitle: string; content: string; tags: string[] };
 type Props = { source: Source; onClose: () => void };
@@ -54,107 +53,82 @@ function breakLines(text: string, maxUnits: number): string[] {
 }
 function filename(s: string) { return s.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-').slice(0, 48) || '词间'; }
 
-function Blossom({ x, y, scale = 1, dark = false }: { x: number; y: number; scale?: number; dark?: boolean }) {
-  return <g transform={`translate(${x} ${y}) scale(${scale})`} opacity={dark ? .5 : .83}>
-    {[0, 72, 144, 216, 288].map(a => <ellipse key={a} cx="0" cy="-12" rx="8" ry="15" transform={`rotate(${a})`} fill={dark ? '#b0b9aa' : '#fff8eb'} stroke="#9eaa94" strokeWidth="1.2" />)}
-    <circle r="5" fill="#cfb17c" />
-  </g>;
-}
 
-function PosterArt({ source, theme, size, highlight, excerpt }: {
-  source: Source; theme: PosterTheme; size: PosterSize; highlight: string; excerpt: string;
+const BACKGROUNDS = [
+  { id: 'spring', name: '春山亭影', ink: '#302e2a', soft: '#68766a', accent: '#809582' },
+  { id: 'mountain', name: '远山春晓', ink: '#302e2a', soft: '#68766a', accent: '#809582' },
+  { id: 'lake', name: '江南烟水', ink: '#302e2a', soft: '#68766a', accent: '#809582' },
+  { id: 'plum', name: '梅岸归舟', ink: '#302e2a', soft: '#806c61', accent: '#a27e60' },
+  { id: 'moon', name: '月夜青山', ink: '#f6eedf', soft: '#e1e4d8', accent: '#bcb99a' },
+] as const;
+type BackgroundId = typeof BACKGROUNDS[number]['id'];
+const backgroundUrl = (id: BackgroundId) => '/share-bg/' + id + '.webp';
+
+function PosterArt({ source, background, size, highlight, excerpt }: {
+  source: Source; background: BackgroundId; size: PosterSize; highlight: string; excerpt: string;
 }) {
-  const p = PALETTES[theme], square = size === 'square', height = square ? 1080 : 1920;
-  const maxLines = square ? 6 : (source.kind === 'work' ? 10 : 11);
-  const fontSize = square ? 38 : source.kind === 'work' ? 44 : 38;
-  const lineHeight = square ? 63 : source.kind === 'work' ? 85 : 69;
-  const lines = breakLines(plainText(excerpt), square ? 24 : source.kind === 'work' ? 22 : 26);
+  const p = BACKGROUNDS.find(b => b.id === background) ?? BACKGROUNDS[0];
+  const square = size === 'square', height = square ? 1080 : 1920;
+  const fontSize = square ? 35 : source.kind === 'work' ? 44 : 37;
+  const lineHeight = square ? 59 : source.kind === 'work' ? 82 : 65;
+  const lines = breakLines(plainText(excerpt), square ? 25 : (source.kind === 'work' ? 21 : 25));
+  const maxLines = square ? 6 : source.kind === 'work' ? 8 : 10;
   const shown = lines.slice(0, maxLines);
   const truncated = lines.length > maxLines;
-  const titleSize = source.title.length > 15 ? 56 : source.title.length > 9 ? 65 : 84;
-  const contentStart = square ? 415 : 540;
-  const maxY = square ? 815 : 1390;
-  const emphasis = highlight.trim().slice(0, 70);
-  const showEmphasis = !!emphasis;
-  const contentBottom = Math.min(maxY, contentStart + shown.length * lineHeight);
-  const emphasisY = Math.min(maxY + 65, contentBottom + (square ? 38 : 70));
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 1080 ${height}`} width="1080" height={height} role="img" aria-label={source.title + '分享海报'}>
-      <defs>
-        <linearGradient id="cj-share-fog" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor={p.paper} stopOpacity="0" /><stop offset=".95" stopColor={p.wash} stopOpacity=".87" />
-        </linearGradient>
-        <pattern id="cj-share-grain" width="75" height="75" patternUnits="userSpaceOnUse">
-          <circle cx="12" cy="8" r=".8" fill={p.ink} opacity=".085" />
-          <circle cx="42" cy="57" r=".65" fill={p.ink} opacity=".07" />
-          <circle cx="68" cy="26" r=".8" fill={p.ink} opacity=".06" />
-        </pattern>
-      </defs>
-      <rect width="1080" height={height} fill={p.paper} />
-      <rect width="1080" height={height} fill="url(#cj-share-grain)" />
-      <circle cx="750" cy="265" r="146" fill={p.wash} opacity=".42" />
-      <g opacity=".45" stroke={p.soft} strokeWidth="5" fill="none">
-        <path d="M1078 15 C940 45 887 98 836 148 S740 192 670 235" />
-        <path d="M958 64 Q1015 119 1060 175" />
-        <path d="M849 137 Q841 80 808 43" />
-        <path d="M746 190 Q726 145 693 133" />
-      </g>
-      <g fill={p.soft} opacity=".40">
-        <ellipse cx="874" cy="97" rx="26" ry="10" transform="rotate(-37 874 97)"/>
-        <ellipse cx="931" cy="97" rx="28" ry="9" transform="rotate(28 931 97)"/>
-        <ellipse cx="772" cy="177" rx="23" ry="9" transform="rotate(-28 772 177)"/>
-      </g>
-      <Blossom x={956} y={59} scale={1.3} dark={theme === 'night'} />
-      <Blossom x={854} y={134} scale={.95} dark={theme === 'night'} />
-      <Blossom x={1017} y={167} scale={1.13} dark={theme === 'night'} />
-      <Blossom x={718} y={219} scale={.75} dark={theme === 'night'} />
-
-      {/* Brand intentionally only in header. No promotional footer. */}
-      <rect x="76" y="75" width="76" height="76" rx="16" fill={p.accent} opacity=".86" />
-      <path d="M94 115 Q114 92 134 115 M90 116 H138 M99 121 V139 M129 121 V139 M97 140 H132" fill="none" stroke={p.paper} strokeWidth="3" strokeLinecap="round"/>
-      <text x="176" y="121" fontFamily={serif} fontSize="45" fill={p.ink} letterSpacing="6">词间</text>
-      <text x="178" y="152" fontFamily={serif} fontSize="18" fill={p.soft} letterSpacing="7">诗词与札记</text>
-
-      <rect x="78" y="247" width="119" height="46" rx="21" fill="none" stroke={p.accent} strokeWidth="2" />
-      <text x="137" y="278" textAnchor="middle" fill={p.soft} fontSize="24" letterSpacing="4" fontFamily={serif}>{source.kind === 'work' ? '词作' : '札记'}</text>
-      <path d="M235 270 H407" stroke={p.accent} opacity=".48" strokeWidth="1.5"/>
-      <text x="76" y="387" fill={p.ink} fontSize={titleSize} fontFamily={serif} fontWeight="600" textLength={source.title.length > 16 ? 930 : undefined} lengthAdjust="spacingAndGlyphs">{source.title}</text>
-      <rect x="970" y="338" width="30" height="47" rx="3" fill="none" stroke="#a65f4b" strokeWidth="2"/>
-      <text x="984" y="358" fill="#a65f4b" fontSize="14" textAnchor="middle">词</text><text x="984" y="376" fill="#a65f4b" fontSize="14" textAnchor="middle">间</text>
-      <text x="80" y="453" fill={p.soft} fontSize="26" fontFamily={serif}>{source.subtitle.slice(0, 55)}</text>
-
-      <g fill={p.ink} fontSize={fontSize} fontFamily={serif}>
-        {shown.map((line, i) => line ? <text x="80" y={contentStart + i * lineHeight} key={i}>{line}</text> : null)}
-        {truncated && <text x="80" y={contentStart + shown.length * lineHeight} fontSize="30" fill={p.soft}>……</text>}
-      </g>
-      {showEmphasis && emphasisY < height - 210 && <>
-        <rect x="59" y={emphasisY - 44} width="962" height="66" rx="22" fill={p.accent} opacity=".18" />
-        <text x="85" y={emphasisY + 3} fontFamily={serif} fontSize={emphasis.length > 23 ? 29 : 39} fill={p.ink}>{emphasis}</text>
-      </>}
-      {source.tags.length > 0 && <g transform={`translate(78 ${height - (square ? 163 : 347)})`}>
-        {source.tags.slice(0, 3).map((tag, i) => <g key={i} transform={`translate(${i * 160} 0)`}>
-          <rect width="142" height="44" rx="22" stroke={p.accent} strokeWidth="1.5" fill={p.paper} fillOpacity=".55" />
-          <text x="71" y="29" textAnchor="middle" fontSize="22" fill={p.soft} fontFamily={serif}>{tag.slice(0, 6)}</text>
-        </g>)}
-      </g>}
-
-      <g opacity=".53" pointerEvents="none">
-        <path d={`M0 ${height - 220} Q180 ${height - 430} 340 ${height - 275} Q490 ${height - 460} 625 ${height - 290} Q820 ${height - 510} 1080 ${height - 285} L1080 ${height} H0 Z`} fill={p.mountain}/>
-        <path d={`M0 ${height - 135} Q220 ${height - 325} 440 ${height - 168} Q645 ${height - 302} 790 ${height - 158} Q940 ${height - 295} 1080 ${height - 157} L1080 ${height} H0 Z`} fill={p.wash}/>
-        <rect y={height - 290} width="1080" height="290" fill="url(#cj-share-fog)" />
-      </g>
-      <g transform={`translate(820 ${height - 274})`} opacity=".44" stroke={p.soft} fill="none" strokeWidth="5">
-        <path d="M0 66 Q95 -14 200 66 M13 69 H213 M40 74 V205 M181 74 V205 M28 151 H198 M28 211 H198"/>
-        <path d="M13 210 H211 M60 95 H166 M60 122 H166"/>
-      </g>
-    </svg>
-  );
+  const titleSize = source.title.length > 15 ? 49 : source.title.length > 10 ? 61 : 79;
+  const startY = square ? 400 : 540;
+  const contentBottom = startY + shown.length * lineHeight;
+  const emphasis = highlight.trim().slice(0, 55);
+  const emphasisY = contentBottom + 70;
+  return <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 1080 ${height}`}
+    width="1080" height={height} aria-label={source.title + '分享海报'} role="img">
+    <image href={backgroundUrl(background)} x="0" y="0" width="1080" height={height}
+      preserveAspectRatio={square ? 'xMidYMin slice' : 'none'} />
+    {/* Brand and seal are baked into the supplied background images. */}
+    <text x="85" y={square ? 238 : 338} fill={p.soft} fontFamily={serif} fontSize="27" letterSpacing="4">
+      {source.kind === 'work' ? '词作' : '札记'}
+    </text>
+    <path d={square ? 'M220 229 H387' : 'M220 329 H387'} stroke={p.accent} strokeWidth="1.4" opacity=".6"/>
+    <text x="82" y={square ? 341 : 438} fontFamily={serif} fontSize={titleSize}
+      fill={p.ink} fontWeight="600" textLength={source.title.length > 19 ? 920 : undefined}
+      lengthAdjust="spacingAndGlyphs">{source.title}</text>
+    <text x="86" y={square ? 385 : 496} fontFamily={serif} fontSize="25" fill={p.soft}>
+      {source.subtitle.slice(0, 36)}
+    </text>
+    <g fontFamily={serif} fill={p.ink} fontSize={fontSize}>
+      {shown.map((line, i) => line ? <text x="85" y={startY + i * lineHeight} key={i}>{line}</text> : null)}
+      {truncated ? <text x="85" y={startY + shown.length * lineHeight} fill={p.soft} fontSize="30">……</text> : null}
+    </g>
+    {emphasis && emphasisY < height - (square ? 100 : 275) ? <>
+      <rect x="67" y={emphasisY - 48} width="950" height="69" rx="15" fill={p.accent} opacity=".19" />
+      <text x="85" y={emphasisY} fill={p.ink} fontFamily={serif}
+        fontSize={emphasis.length > 22 ? 28 : 37}>{emphasis}</text>
+    </> : null}
+  </svg>;
 }
 
 async function exportPng(svg: SVGSVGElement, title: string) {
-  // Data URL avoids external assets; all decorations are native vectors.
+  // Inline the static background as a data URL before Canvas export.
   await document.fonts.ready;
-  const xml = new XMLSerializer().serializeToString(svg);
+  // Inline the same-origin backdrop before SVG → Canvas to avoid broken image exports.
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+  const bg = clone.querySelector('image');
+  if (bg) {
+    const href = bg.getAttribute('href');
+    if (href) {
+      const response = await fetch(href);
+      if (!response.ok) throw new Error('背景图片尚未安装，请先复制 public/share-bg 素材');
+      const blob = await response.blob();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error('读取背景失败'));
+        reader.readAsDataURL(blob);
+      });
+      bg.setAttribute('href', dataUrl);
+    }
+  }
+  const xml = new XMLSerializer().serializeToString(clone);
   const url = URL.createObjectURL(new Blob([xml], { type: 'image/svg+xml;charset=utf-8' }));
   try {
     const image = new Image();
@@ -179,7 +153,7 @@ async function exportPng(svg: SVGSVGElement, title: string) {
 }
 
 export function SharePoster({ source, onClose }: Props) {
-  const [theme, setTheme] = useState<PosterTheme>('mist');
+  const [background, setBackground] = useState<BackgroundId>('spring');
   const [size, setSize] = useState<PosterSize>('portrait');
   const [excerpt, setExcerpt] = useState(source.content);
   const [highlight, setHighlight] = useState('');
@@ -203,14 +177,19 @@ export function SharePoster({ source, onClose }: Props) {
       <div className="cj-share-layout">
         <div className="cj-share-controls">
           <label>画面比例<select value={size} onChange={e=>setSize(e.target.value as PosterSize)}><option value="portrait">竖版 · 9:16</option><option value="square">方形 · 1:1</option></select></label>
-          <label>纸张风格<select value={theme} onChange={e=>setTheme(e.target.value as PosterTheme)}><option value="mist">青绿水墨</option><option value="paper">暖纸素笺</option><option value="night">夜色墨绿</option></select></label>
+          <fieldset className="cj-share-backgrounds"><legend>选择背景</legend><div className="cj-share-background-grid">
+            {BACKGROUNDS.map(item => <button key={item.id} type="button" className={background === item.id ? 'cj-share-bg-on' : ''}
+              aria-pressed={background === item.id} onClick={() => setBackground(item.id)}>
+              <img src={backgroundUrl(item.id)} alt="" loading="lazy" /><span>{item.name}</span>
+            </button>)}
+          </div></fieldset>
           <label>海报正文<textarea value={excerpt} rows={8} onChange={e=>setExcerpt(e.target.value)} placeholder="填写要分享到图片上的文字" /></label>
           <p className="cj-share-hint">当前 {count} 字。长文建议节选；超出画面的部分会以省略号提示，不会修改原文。</p>
           <label>重点句（可选）<input value={highlight} maxLength={70} onChange={e=>setHighlight(e.target.value)} placeholder="单独强调的一句" /></label>
           <button type="button" className="cn-btn cn-btn-primary" onClick={save} disabled={busy}>{busy ? '正在生成…' : '保存 PNG 图片'}</button>
           <p className="cj-share-hint">分享到朋友圈或抖音前，请先保存图片。本站不自动发布到第三方平台。</p>
         </div>
-        <div className="cj-share-preview"><div ref={svgRef}><PosterArt source={source} theme={theme} size={size} highlight={highlight} excerpt={excerpt} /></div></div>
+        <div className="cj-share-preview"><div ref={svgRef}><PosterArt source={source} background={background} size={size} highlight={highlight} excerpt={excerpt} /></div></div>
       </div>
     </section>
   </div>;
