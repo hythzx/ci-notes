@@ -72,7 +72,7 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
   const fontSize = square ? 35 : source.kind === 'work' ? 44 : 37;
   const lineHeight = square ? 59 : source.kind === 'work' ? 82 : 65;
   const lines = breakLines(plainText(excerpt), square ? 25 : (source.kind === 'work' ? 21 : 25));
-  const maxLines = square ? 7 : source.kind === 'work' ? 12 : 15;
+  const maxLines = square ? 6 : source.kind === 'work' ? 8 : 10;
   const shown = lines.slice(0, maxLines);
   const truncated = lines.length > maxLines;
   const titleSize = source.title.length > 15 ? 49 : source.title.length > 10 ? 61 : 79;
