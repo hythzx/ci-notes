@@ -295,6 +295,7 @@ export function ClaimsEditor({ value, onChange }: { value: Claim[]; onChange: (c
       {value.map((c, i) => (
         <div className="cn-claim" key={c.id || `claim-${i}`}>
           <div className="cn-claim-text">{c.text}</div>
+          {c.anchor?.quote ? <div className="cn-claim-cite">标注范围：{c.anchor.quote}</div> : null}
           {(c.citations || []).filter(citationHasContent).map((x, j) => (
             <div className="cn-claim-cite" key={x.id || `cite-${j}`}>
               出处：{citationSummary(x)}
