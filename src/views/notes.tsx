@@ -52,6 +52,9 @@ import {
   StatusSwitcher,
   TextArea,
 } from '../components/editors';
+import { drawMarks } from '../annotate';
+import { AnnotateModal, useSelectionAnnotate } from '../components/annotate';
+import type { SelectionPick } from '../components/annotate';
 import { Md } from '../components/md';
 import { AllusionSection, ImagerySection } from '../components/sections';
 import { citationLine, download, formatDateTime, noteToMarkdown } from '../exporter';
@@ -109,6 +112,12 @@ function isProtected(n: Note): boolean {
   return n.writingStatus === 'final' || n.publishStatus === 'published';
 }
 
+/** Range 边界所在节点向上找段落组元素（划选定位用；文本节点取父元素） */
+function groupOf(node: Node): HTMLElement | null {
+  const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : (node as Element);
+  return el ? el.closest('.cj-md-group') : null;
+}
+
 /** 出处行是否携带实际内容（备注不算，与编辑器门禁一致） */
 function citationHasContent(c: Citation): boolean {
   return !!(c.book || c.edition || c.page || c.url);
@@ -163,6 +172,7 @@ function ClaimRow({ claim }: { claim: Claim }) {
       <div className="cj-claim-text">
         <Md text={claim.text} inline />
       </div>
+      {claim.anchor?.quote ? <div className="cj-claim-cite">标注范围：{claim.anchor.quote}</div> : null}
       {claim.citations.filter(citationHasContent).map((x, j) => (
         <div className="cj-claim-cite" key={x.id || `cite-${j}`}>出处：{citationLine(x)}</div>
       ))}
@@ -305,6 +315,11 @@ export function NoteDetail({ id }: { id: string }) {
   const [busy, setBusy] = useState(false);
   const [confirmUnprotect, setConfirmUnprotect] = useState(false);
   const [paraModal, setParaModal] = useState<number | null>(null);
+  const [annotatePick, setAnnotatePick] = useState<SelectionPick | null>(null);
+  const [markModal, setMarkModal] = useState<Claim | null>(null);
+  /** 划选标注保存后若派生草稿（定稿/已发布），供 ChooseBox 跳转 */
+  const [derivedDraft, setDerivedDraft] = useState<Note | null>(null);
+  const articleRef = useRef<HTMLDivElement>(null);
 
   /** 返回清理函数供 effect 取消晚到响应；重试按钮也复用此函数 */
   function load(): () => void {
@@ -339,6 +354,20 @@ export function NoteDetail({ id }: { id: string }) {
     return m;
   }, [detail]);
 
+  /* 划选标注：选区必须完整落在同一段落组内，跨段拒绝 */
+  useSelectionAnnotate({
+    containerRef: articleRef,
+    enabled: !!detail,
+    locate: (range) => {
+      const el = groupOf(range.startContainer);
+      if (!el || el !== groupOf(range.endContainer)) return null;
+      const g = Number(el.dataset.group);
+      return Number.isInteger(g) && g >= 0 ? { paragraph: g, host: el } : null;
+    },
+    onReject: () => notifyToast('请在一段之内选择'),
+    onPick: (pick) => setAnnotatePick(pick),
+  });
+
   /**
    * Md onGroup 回调：段落组刚装好（尚未入容器），在此做 DOM 挂载。
    * 注意不经过 React——组元素由 markdown.ts 创建，effect 里整体挂载，
@@ -346,7 +375,13 @@ export function NoteDetail({ id }: { id: string }) {
    */
   function attachMarks(el: HTMLElement, group: number) {
     el.className = 'cj-para cj-md-group';
-    el.addEventListener('click', () => setParaModal(group));
+    el.dataset.group = String(group);
+    el.addEventListener('click', () => {
+      // 划选结束的 click（选区非空）不当段落点击
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) return;
+      setParaModal(group);
+    });
     const list = marks.get(group);
     if (list && list.length) {
       const box = document.createElement('div');
@@ -359,6 +394,9 @@ export function NoteDetail({ id }: { id: string }) {
       }
       el.appendChild(box);
     }
+    // 带锚点的条目画虚线；点击虚线弹单条标注 Modal
+    const anchored = (list || []).filter((c) => c.anchor && c.anchor.quote);
+    if (anchored.length) drawMarks(el, anchored, (c) => setMarkModal(c));
   }
 
   function doExport() {
@@ -407,6 +445,30 @@ export function NoteDetail({ id }: { id: string }) {
         setBusy(false);
         setConfirmRemove(false);
         notifyToast(e instanceof ApiError ? e.message : '移入回收站失败');
+      },
+    );
+  }
+
+  /** 划选标注落库：claims 追加一条带 baseRevision 保存；定稿/已发布走派生草稿分支 */
+  function saveAnnotation(claim: Claim) {
+    if (!detail) return;
+    const claims = [...detail.note.claims, claim];
+    api.notes.update(detail.note.id, { claims, baseRevision: detail.note.revision }).then(
+      (res) => {
+        setAnnotatePick(null);
+        if (res.createdDraft) {
+          setDerivedDraft(res.draft);
+        } else {
+          notifyToast('已标注');
+          load();
+        }
+      },
+      (e: unknown) => {
+        notifyToast(
+          e instanceof ApiError && e.code === 'CONFLICT'
+            ? '内容在别处被改过，请刷新后重试'
+            : e instanceof ApiError ? e.message : '标注保存失败',
+        );
       },
     );
   }
@@ -497,9 +559,9 @@ export function NoteDetail({ id }: { id: string }) {
         </div>
       ) : null}
 
-      <div className="cj-article">
+      <div className="cj-article" ref={articleRef}>
         {hasContent ? (
-          <Md text={n.content} onGroup={attachMarks} />
+          <Md key={n.revision} text={n.content} onGroup={attachMarks} />
         ) : (
           <EmptyState text="正文待导入。点「编辑」把你写的原稿贴进来。" />
         )}
@@ -586,6 +648,37 @@ export function NoteDetail({ id }: { id: string }) {
             )}
           </div>
         </Modal>
+      ) : null}
+
+      {annotatePick ? (
+        <AnnotateModal
+          pick={annotatePick}
+          onSave={saveAnnotation}
+          onClose={() => setAnnotatePick(null)}
+        />
+      ) : null}
+
+      {markModal ? (
+        <Modal title="标注" onClose={() => setMarkModal(null)}>
+          <div className="cj-card">
+            <ClaimRow claim={markModal} />
+          </div>
+        </Modal>
+      ) : null}
+
+      {derivedDraft ? (
+        <ChooseBox
+          title="原版已保留，另起新草稿"
+          message="这篇已经定稿或标记为已发布，内容一字未动。你的标注存成了一篇新草稿。"
+          choices={[{ key: 'go', label: '去看新草稿' }]}
+          onPick={(key) => {
+            const d = derivedDraft;
+            setDerivedDraft(null);
+            if (key === 'go' && d) navigate('#/notes/' + d.id + '/edit');
+          }}
+          onCancel={() => setDerivedDraft(null)}
+          cancelLabel="留在原篇"
+        />
       ) : null}
 
       {confirmUnprotect ? (
