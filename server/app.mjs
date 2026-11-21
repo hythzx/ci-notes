@@ -228,7 +228,7 @@ export function createApp({dbPath,dataDir,username,password,sessionSecret,distPa
    const path=resolve(distPath,relative||'index.html');
    if(!path.startsWith(resolve(distPath)+'/'))return json(res,403,{error:'禁止访问'});
    if(!existsSync(path)||!statSync(path).isFile())return json(res,404,{error:'页面不存在'});
-   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.ico':'image/x-icon','.woff2':'font/woff2'};
+   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.ico':'image/x-icon','.woff2':'font/woff2','.webp':'image/webp'};
    res.setHeader('Content-Type',types[extname(path)]??'application/octet-stream');
    if(req.method==='HEAD')return res.end();
    createReadStream(path).on('error',()=>res.destroy()).pipe(res);
