@@ -65,7 +65,7 @@ function PosterArt({ source, theme, size, highlight, excerpt }: {
   source: Source; theme: PosterTheme; size: PosterSize; highlight: string; excerpt: string;
 }) {
   const p = PALETTES[theme], square = size === 'square', height = square ? 1080 : 1920;
-  const maxLines = square ? (source.kind === 'work' ? 8 : 7) : (source.kind === 'work' ? 17 : 16);
+  const maxLines = square ? 6 : (source.kind === 'work' ? 10 : 11);
   const fontSize = square ? 38 : source.kind === 'work' ? 44 : 38;
   const lineHeight = square ? 63 : source.kind === 'work' ? 85 : 69;
   const lines = breakLines(plainText(excerpt), square ? 24 : source.kind === 'work' ? 22 : 26);
@@ -73,11 +73,11 @@ function PosterArt({ source, theme, size, highlight, excerpt }: {
   const truncated = lines.length > maxLines;
   const titleSize = source.title.length > 15 ? 56 : source.title.length > 9 ? 65 : 84;
   const contentStart = square ? 415 : 540;
-  const maxY = square ? 875 : 1575;
+  const maxY = square ? 815 : 1390;
   const emphasis = highlight.trim().slice(0, 70);
   const showEmphasis = !!emphasis;
   const contentBottom = Math.min(maxY, contentStart + shown.length * lineHeight);
-  const emphasisY = Math.min(maxY + 95, contentBottom + (square ? 38 : 70));
+  const emphasisY = Math.min(maxY + 65, contentBottom + (square ? 38 : 70));
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 1080 ${height}`} width="1080" height={height} role="img" aria-label={source.title + '分享海报'}>
       <defs>
