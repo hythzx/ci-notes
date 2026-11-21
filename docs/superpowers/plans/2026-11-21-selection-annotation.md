@@ -43,7 +43,7 @@ test('claims 锚点：quote 非空保留，prefix/suffix 各截 16 字', () => {
   }]);
   assert.equal(c.anchor.quote, '菩萨蛮');
   assert.equal(c.anchor.prefix.length, 16);
-  assert.equal(c.anchor.suffix, '。');
+  assert.equal(c.anchor.suffix, '。' + 'y'.repeat(15));
 });
 
 test('claims 锚点：quote 为空或 anchor 非对象则丢弃', () => {
