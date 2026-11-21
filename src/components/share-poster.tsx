@@ -13,6 +13,7 @@ const PALETTES = {
   night: { paper: '#243532', ink: '#f3e9d5', soft: '#becabd', mountain: '#536a64', accent: '#c7b58a', wash: '#455b54' },
 };
 const serif = '"Noto Serif SC","Source Han Serif SC","Songti SC","STSong",serif';
+const emphasisSerif = '"Kaiti SC","STKaiti","KaiTi","Noto Serif SC","Source Han Serif SC","Songti SC","STSong",serif';
 
 export function sourceFromWork(w: Work): Source {
   return {
@@ -120,12 +121,14 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
       {source.subtitle.slice(0, 36)}
     </text>
     <g fontFamily={serif} fontSize={fontSize}>
-      {layout.lines.map((line, i) => <g key={i}>
-        {line.emphasized ? <path d={`M87 ${line.y - fontSize + 6} v${fontSize + 13}`}
-          stroke={p.accent} strokeWidth="5" strokeLinecap="round" /> : null}
-        <text x={line.emphasized ? 108 : 100} y={line.y} fill={line.emphasized ? p.accent : p.ink}
-          fontWeight={line.emphasized ? 600 : 400}>{line.text}</text>
-      </g>)}
+      {layout.lines.map((line, i) => (
+        <text key={i} x="100" y={line.y} fill={p.ink}
+          fontFamily={line.emphasized ? emphasisSerif : serif}
+          fontSize={line.emphasized ? fontSize + 6 : fontSize}
+          fontWeight={line.emphasized ? 700 : 400}>
+          {line.text}
+        </text>
+      ))}
       {layout.truncated ? <text x="100" y={Math.min(square ? 987 : 1532, (layout.lines.at(-1)?.y || 720) + 78)}
         fill={p.soft} fontSize="29">……</text> : null}
     </g>
