@@ -59,6 +59,7 @@ import { Md } from '../components/md';
 import { AllusionSection, ImagerySection } from '../components/sections';
 import { citationLine, download, formatDateTime, noteToMarkdown } from '../exporter';
 import { navigate } from '../router';
+import { SharePoster, sourceFromNote } from '../components/share-poster';
 
 /* ------------------------------------------------------------------ */
 /* 常量与小件（模块顶层，供三个视图共用）                                */
@@ -308,6 +309,7 @@ export function NotesList() {
  * 意象 / 典故区由 sections 组件提供。
  */
 export function NoteDetail({ id }: { id: string }) {
+  const [shareOpen, setShareOpen] = useState(false);
   const [detail, setDetail] = useState<NoteDetail | null>(null);
   const [error, setError] = useState('');
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -495,6 +497,7 @@ export function NoteDetail({ id }: { id: string }) {
         <div className="cj-pagehead-ops">
           <a className="cn-btn cn-btn-ghost cn-btn-sm" href={'#/notes/' + n.id + '/edit'}>编辑</a>
           <a className="cn-btn cn-btn-ghost cn-btn-sm" href={'#/notes/' + n.id + '/history'}>版本历史</a>
+          <button type="button" className="cn-btn cn-btn-primary cn-btn-sm" onClick={() => setShareOpen(true)}>分享图片</button>
           <button type="button" className="cn-btn cn-btn-ghost cn-btn-sm" onClick={doExport}>
             导出 Markdown
           </button>
@@ -629,6 +632,8 @@ export function NoteDetail({ id }: { id: string }) {
       <Section title="典故">
         <AllusionSection targetType="note" targetId={n.id} />
       </Section>
+
+      {shareOpen ? <SharePoster source={sourceFromNote(n, linkedWorks.map(x => x.work))} onClose={() => setShareOpen(false)} /> : null}
 
       {annotatePick ? (
         <AnnotateModal
