@@ -1839,3 +1839,37 @@ button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) {
   .cj-listitem, .cj-action, .cj-btn, .cn-btn, .cj-navlink { transition: none !important; }
 }
+
+/* 划选标注：三色虚线 + 浮动「标注」按钮 + 引文预览 */
+.cj-mark { cursor: pointer; border-radius: 2px; }
+.cj-mark-verified,
+.cj-mark-pending,
+.cj-mark-personal {
+  text-decoration: underline dashed;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.cj-mark-verified { text-decoration-color: var(--green); }
+.cj-mark-pending { text-decoration-color: var(--warn); }
+.cj-mark-personal { text-decoration-color: var(--purple); }
+.cj-annotate-fab {
+  position: fixed;
+  z-index: 80;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border: 1px solid var(--ink-3);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.cj-markquote {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  background: var(--paper-2);
+  border-left: 3px solid #d8d2c4;
+  border-radius: 4px;
+  font-size: 15px;
+}

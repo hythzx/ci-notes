@@ -328,10 +328,12 @@ export function ClaimsEditor({ value, onChange }: { value: Claim[]; onChange: (c
  * 单条标注的编辑面板：全部字段是输入草稿，「存下这条」才落回 value。
  * 新条目不生成前端 id（留空，服务端 normalizeClaims 补）。
  */
-function ClaimPanel({ initial, onSave, onCancel }: {
+export function ClaimPanel({ initial, onSave, onCancel, lockParagraph }: {
   initial: Claim;
   onSave: (claim: Claim) => void;
   onCancel: () => void;
+  /** 阅读页划选创建用：隐藏挂靠段号字段，段号以 initial 为准 */
+  lockParagraph?: boolean;
 }) {
   const [kind, setKind] = useState<ClaimKind>(initial.kind);
   const [text, setText] = useState(initial.text);
@@ -371,9 +373,11 @@ function ClaimPanel({ initial, onSave, onCancel }: {
           onChange={(e) => setText(e.target.value)}
         />
       </Field>
-      <Field label="挂靠段落" hint="对应正文第几段（从 0 起）；留空或 -1 表示不挂段落">
-        <Input type="number" min={-1} value={para} onChange={(e) => setPara(e.target.value)} />
-      </Field>
+      {lockParagraph ? null : (
+        <Field label="挂靠段落" hint="对应正文第几段（从 0 起）；留空或 -1 表示不挂段落">
+          <Input type="number" min={-1} value={para} onChange={(e) => setPara(e.target.value)} />
+        </Field>
+      )}
       <Field label="出处（标「已核实」时必填）">
         <CitationsEditor value={cites} onChange={setCites} />
       </Field>
