@@ -11,3 +11,12 @@
 .cj-share-preview{display:grid;place-items:start center;min-width:0;padding:14px;background:#e8e7df;border-radius:12px;overflow:auto}
 .cj-share-preview>div{width:min(100%,390px)}.cj-share-preview svg{display:block;width:100%;height:auto;box-shadow:0 8px 24px #0002}
 @media(max-width:700px){.cj-share-layout{grid-template-columns:1fr;padding:15px}.cj-share-dialog{max-height:calc(100dvh - 16px)}.cj-share-backdrop{padding:8px}.cj-share-heading{padding:15px}.cj-share-preview{order:-1;max-height:52dvh;overflow:auto}.cj-share-preview>div{width:min(100%,280px)}}
+
+.cj-share-backgrounds{padding:0;border:0;margin:0;min-width:0}
+.cj-share-backgrounds legend{font-weight:600;font-size:14px;margin-bottom:9px}
+.cj-share-background-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.cj-share-background-grid button{padding:4px;border:2px solid transparent;background:transparent;cursor:pointer;border-radius:9px;color:inherit;min-width:0;text-align:center}
+.cj-share-background-grid button.cj-share-bg-on{border-color:#829a86;background:#e6ebe3}
+.cj-share-background-grid img{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:5px}
+.cj-share-background-grid span{font-size:11px;white-space:nowrap}
+@media(max-width:580px){.cj-share-background-grid{gap:3px}.cj-share-background-grid button{padding:2px}.cj-share-background-grid span{font-size:10px}}
