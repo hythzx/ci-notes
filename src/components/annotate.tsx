@@ -84,7 +84,10 @@ export function useSelectionAnnotate(opts: SelectionAnnotateOptions) {
       fab.className = 'cj-annotate-fab';
       fab.textContent = '标注';
       // 按钮自身不触发文档级 pointerdown（否则刚出现即被收走）
-      fab.addEventListener('pointerdown', (e) => e.stopPropagation());
+      fab.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault(); // 防个别引擎 button 按下即塌陷选区，导致 selectionchange 先收走按钮
+      });
       fab.addEventListener('click', (e) => {
         e.stopPropagation();
         hideFab();

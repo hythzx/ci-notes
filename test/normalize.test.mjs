@@ -30,13 +30,14 @@ test('id 生成稳定', () => {
   assert.equal(derivedId('w_', 'a', 'b'), derivedId('w_', 'a', 'b'));
   assert.notEqual(derivedId('w_', 'a', 'b'), derivedId('w_', 'a', 'c'));
 });
-test('claims 锚点：quote 非空保留，prefix/suffix 各截 16 字', () => {
+test('claims 锚点：quote 校验 trim 非空、存储原样，prefix/suffix 各截 16 字', () => {
   const [c] = normalizeClaims([{
     text: '注',
     paragraph: 0,
     anchor: { quote: '  菩萨蛮  ', prefix: '一字一行一' + 'x'.repeat(20), suffix: '。' + 'y'.repeat(20) },
   }]);
-  assert.equal(c.anchor.quote, '菩萨蛮');
+  // 行为契约：服务端校验用 trim，但存储原样保留首尾空白（前端按未 trim 边界采样，回显须精确对位）
+  assert.equal(c.anchor.quote, '  菩萨蛮  ');
   assert.equal(c.anchor.prefix.length, 16);
   assert.equal(c.anchor.suffix, '。' + 'y'.repeat(15));
 });

@@ -110,10 +110,10 @@ export function normalizeCitations(list) {
 /** 锚点前后文取样长度（与前端 src/annotate.ts 的 ANCHOR_CONTEXT 一致） */
 const ANCHOR_CONTEXT = 16;
 
-/** 锚点归一化：quote 非空才保留整个 anchor，prefix/suffix 各截 16 字 */
+/** 锚点归一化：quote 校验 trim 非空、存储原样（与前端采样边界一致），prefix/suffix 各截 16 字 */
 function normalizeAnchor(anchor) {
   if (!anchor || typeof anchor !== 'object') return undefined;
-  const quote = typeof anchor.quote === 'string' ? anchor.quote.trim() : '';
+  const quote = typeof anchor.quote === 'string' && anchor.quote.trim() ? anchor.quote : '';
   if (!quote) return undefined;
   return {
     quote,
