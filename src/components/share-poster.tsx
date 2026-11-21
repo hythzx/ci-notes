@@ -80,7 +80,7 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
   const contentBottom = startY + shown.length * lineHeight;
   const emphasis = highlight.trim().slice(0, 55);
   const emphasisY = contentBottom + 70;
-  return <svg xmlns="http://www.w3.org/2000/svg" viewBox={\`0 0 1080 \${height}\`}
+  return <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 1080 ${height}`}
     width="1080" height={height} aria-label={source.title + '分享海报'} role="img">
     <image href={backgroundUrl(background)} x="0" y="0" width="1080" height={height}
       preserveAspectRatio={square ? 'xMidYMin slice' : 'none'} />
@@ -108,7 +108,7 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
 }
 
 async function exportPng(svg: SVGSVGElement, title: string) {
-  // Data URL avoids external assets; all decorations are native vectors.
+  // Inline the static background as a data URL before Canvas export.
   await document.fonts.ready;
   // Inline the same-origin backdrop before SVG → Canvas to avoid broken image exports.
   const clone = svg.cloneNode(true) as SVGSVGElement;
