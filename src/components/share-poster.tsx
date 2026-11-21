@@ -64,46 +64,71 @@ const BACKGROUNDS = [
 type BackgroundId = typeof BACKGROUNDS[number]['id'];
 const backgroundUrl = (id: BackgroundId) => '/share-bg/' + id + '.webp';
 
+
+type PosterLine = { text: string; y: number; emphasized: boolean };
+function layoutLines(raw: string, highlight: string, size: PosterSize, kind: Source['kind']): { lines: PosterLine[]; truncated: boolean } {
+  const square = size === 'square';
+  const fontSize = square ? 37 : kind === 'work' ? 43 : 39;
+  const lineHeight = square ? 67 : kind === 'work' ? 88 : 80;
+  const maxY = square ? 910 : 1450;
+  const startY = square ? 516 : 725;
+  const selected = plainText(highlight).replace(/\\s+/g, '').trim();
+  const paragraphs = plainText(raw).split(/\\n+/).map(x => x.trim()).filter(Boolean);
+  const result: PosterLine[] = [];
+  let y = startY;
+  let truncated = false;
+  for (let i = 0; i < paragraphs.length; i++) {
+    const lines = breakLines(paragraphs[i], square ? 23 : (kind === 'work' ? 21 : 24));
+    for (let j = 0; j < lines.length; j++) {
+      if (y > maxY) { truncated = true; break; }
+      const line = lines[j];
+      // Emphasize the original text in place. No duplicated quote or opaque banner.
+      const compact = line.replace(/\\s+/g, '');
+      result.push({ text: line, y, emphasized: !!selected && (compact.includes(selected) || (selected.length >= 5 && selected.includes(compact))) });
+      y += lineHeight;
+    }
+    if (truncated) break;
+    if (i < paragraphs.length - 1) y += square ? 28 : 48;
+  }
+  return { lines: result, truncated };
+}
+
 function PosterArt({ source, background, size, highlight, excerpt }: {
   source: Source; background: BackgroundId; size: PosterSize; highlight: string; excerpt: string;
 }) {
   const p = BACKGROUNDS.find(b => b.id === background) ?? BACKGROUNDS[0];
   const square = size === 'square', height = square ? 1080 : 1920;
-  const fontSize = square ? 35 : source.kind === 'work' ? 44 : 37;
-  const lineHeight = square ? 59 : source.kind === 'work' ? 82 : 65;
-  const lines = breakLines(plainText(excerpt), square ? 25 : (source.kind === 'work' ? 21 : 25));
-  const maxLines = square ? 6 : source.kind === 'work' ? 8 : 10;
-  const shown = lines.slice(0, maxLines);
-  const truncated = lines.length > maxLines;
-  const titleSize = source.title.length > 15 ? 49 : source.title.length > 10 ? 61 : 79;
-  const startY = square ? 400 : 540;
-  const contentBottom = startY + shown.length * lineHeight;
-  const emphasis = highlight.trim().slice(0, 55);
-  const emphasisY = contentBottom + 70;
+  const fontSize = square ? 37 : source.kind === 'work' ? 43 : 39;
+  const layout = layoutLines(excerpt, highlight, size, source.kind);
+  const titleSize = source.title.length > 15 ? 48 : source.title.length > 10 ? 60 : 74;
+  const labelY = square ? 310 : 410;
+  const titleY = square ? 402 : 520;
+  const subtitleY = square ? 465 : 598;
   return <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 1080 ${height}`}
     width="1080" height={height} aria-label={source.title + '分享海报'} role="img">
     <image href={backgroundUrl(background)} x="0" y="0" width="1080" height={height}
       preserveAspectRatio={square ? 'xMidYMin slice' : 'none'} />
-    {/* Brand and seal are baked into the supplied background images. */}
-    <text x="85" y={square ? 238 : 338} fill={p.soft} fontFamily={serif} fontSize="27" letterSpacing="4">
+    {/* Logo and red seal are already printed in the curated background. */}
+    <text x="100" y={labelY} fill={p.soft} fontFamily={serif} fontSize="29" letterSpacing="5">
       {source.kind === 'work' ? '词作' : '札记'}
     </text>
-    <path d={square ? 'M220 229 H387' : 'M220 329 H387'} stroke={p.accent} strokeWidth="1.4" opacity=".6"/>
-    <text x="82" y={square ? 341 : 438} fontFamily={serif} fontSize={titleSize}
-      fill={p.ink} fontWeight="600" textLength={source.title.length > 19 ? 920 : undefined}
+    <path d={`M224 ${labelY - 9} H348`} stroke={p.accent} strokeWidth="1.4" opacity=".65" />
+    <text x="98" y={titleY} fontFamily={serif} fontSize={titleSize}
+      fill={p.ink} fontWeight="600" textLength={source.title.length > 19 ? 850 : undefined}
       lengthAdjust="spacingAndGlyphs">{source.title}</text>
-    <text x="86" y={square ? 385 : 496} fontFamily={serif} fontSize="25" fill={p.soft}>
+    <text x="101" y={subtitleY} fontFamily={serif} fontSize="27" fill={p.soft}>
       {source.subtitle.slice(0, 36)}
     </text>
-    <g fontFamily={serif} fill={p.ink} fontSize={fontSize}>
-      {shown.map((line, i) => line ? <text x="85" y={startY + i * lineHeight} key={i}>{line}</text> : null)}
-      {truncated ? <text x="85" y={startY + shown.length * lineHeight} fill={p.soft} fontSize="30">……</text> : null}
+    <g fontFamily={serif} fontSize={fontSize}>
+      {layout.lines.map((line, i) => <g key={i}>
+        {line.emphasized ? <path d={`M87 ${line.y - fontSize + 6} v${fontSize + 13}`}
+          stroke={p.accent} strokeWidth="5" strokeLinecap="round" /> : null}
+        <text x={line.emphasized ? 108 : 100} y={line.y} fill={line.emphasized ? p.accent : p.ink}
+          fontWeight={line.emphasized ? 600 : 400}>{line.text}</text>
+      </g>)}
+      {layout.truncated ? <text x="100" y={Math.min(square ? 987 : 1532, (layout.lines.at(-1)?.y || 720) + 78)}
+        fill={p.soft} fontSize="29">……</text> : null}
     </g>
-    {emphasis && emphasisY < height - (square ? 100 : 275) ? <>
-      <rect x="67" y={emphasisY - 48} width="950" height="69" rx="15" fill={p.accent} opacity=".19" />
-      <text x="85" y={emphasisY} fill={p.ink} fontFamily={serif}
-        fontSize={emphasis.length > 22 ? 28 : 37}>{emphasis}</text>
-    </> : null}
   </svg>;
 }
 
@@ -129,10 +154,12 @@ async function exportPng(svg: SVGSVGElement, title: string) {
     }
   }
   const xml = new XMLSerializer().serializeToString(clone);
-  const url = URL.createObjectURL(new Blob([xml], { type: 'image/svg+xml;charset=utf-8' }));
-  try {
+  // The app's CSP permits data: images but explicitly blocks blob: in img-src.
+  // Embed the SVG in a data URL instead of creating an object URL for Image.src.
+  const imageUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+  {
     const image = new Image();
-    image.src = url;
+    image.src = imageUrl;
     await image.decode();
     const canvas = document.createElement('canvas');
     canvas.width = svg.viewBox.baseVal.width;
@@ -149,7 +176,7 @@ async function exportPng(svg: SVGSVGElement, title: string) {
     a.click();
     setTimeout(() => URL.revokeObjectURL(downloadUrl), 2000);
     return blob;
-  } finally { URL.revokeObjectURL(url); }
+  }
 }
 
 export function SharePoster({ source, onClose }: Props) {
