@@ -30,6 +30,7 @@ import {
   ChooseBox,
   ConfirmBox,
   EmptyState,
+  Modal,
   RelTime,
   Section,
   notifyToast,
@@ -46,6 +47,9 @@ import {
 } from '../components/editors';
 import { Md } from '../components/md';
 import { AllusionSection, ImagerySection } from '../components/sections';
+import { drawMarks } from '../annotate';
+import { AnnotateModal, useSelectionAnnotate } from '../components/annotate';
+import type { SelectionPick } from '../components/annotate';
 import { citationLine, download, formatDateTime, workToMarkdown } from '../exporter';
 import { navigate } from '../router';
 
@@ -257,6 +261,9 @@ export function WorkDetail({ id }: { id: string }) {
   const [error, setError] = useState('');
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [annotatePick, setAnnotatePick] = useState<SelectionPick | null>(null);
+  const [markModal, setMarkModal] = useState<Claim | null>(null);
+  const preRef = useRef<HTMLPreElement>(null);
 
   /** 返回清理函数供 effect 取消晚到响应；重试按钮也复用此函数 */
   function load(): () => void {
@@ -278,6 +285,24 @@ export function WorkDetail({ id }: { id: string }) {
 
   useEffect(load, [id]);
 
+  /* 划选标注：词作原文整篇可标（paragraph=-1），无段落边界 */
+  useSelectionAnnotate({
+    containerRef: preRef,
+    enabled: !!detail,
+    locate: () => (preRef.current ? { paragraph: -1, host: preRef.current } : null),
+    onPick: (pick) => setAnnotatePick(pick),
+  });
+
+  /* 原文锚点虚线：词作变更时重绘，清理函数拆旧 span 防叠加 */
+  const work = detail?.work;
+  useEffect(() => {
+    const el = preRef.current;
+    if (!el || !work) return;
+    const anchored = work.claims.filter((c) => c.anchor && c.anchor.quote);
+    if (!anchored.length) return;
+    return drawMarks(el, anchored, (c) => setMarkModal(c));
+  }, [work]);
+
   function doExport() {
     if (!detail) return;
     const w = detail.work;
@@ -297,6 +322,26 @@ export function WorkDetail({ id }: { id: string }) {
         setRemoving(false);
         setConfirmRemove(false);
         notifyToast(e instanceof ApiError ? e.message : '移入回收站失败');
+      },
+    );
+  }
+
+  /** 划选标注落库：claims 追加一条带 baseRevision 保存（词作无保护模型） */
+  function saveAnnotation(claim: Claim) {
+    if (!detail) return;
+    const claims = [...detail.work.claims, claim];
+    api.works.update(detail.work.id, { claims, baseRevision: detail.work.revision }).then(
+      () => {
+        setAnnotatePick(null);
+        notifyToast('已标注');
+        load();
+      },
+      (e: unknown) => {
+        notifyToast(
+          e instanceof ApiError && e.code === 'CONFLICT'
+            ? '内容在别处被改过，请刷新后重试'
+            : e instanceof ApiError ? e.message : '标注保存失败',
+        );
       },
     );
   }
@@ -357,7 +402,7 @@ export function WorkDetail({ id }: { id: string }) {
         {w.content ? (
           <div className="cj-card">
             {/* 词作原文逐字呈现，不解析 Markdown */}
-            <pre className="cj-poem" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{w.content}</pre>
+            <pre ref={preRef} className="cj-poem" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{w.content}</pre>
           </div>
         ) : (
           <div className="cj-card">
@@ -384,6 +429,7 @@ export function WorkDetail({ id }: { id: string }) {
                   <div className="cj-claim-text">
                     <Md text={c.text} inline />
                   </div>
+                  {c.anchor?.quote ? <div className="cj-claim-cite">标注范围：{c.anchor.quote}</div> : null}
                   {c.citations.filter(citationHasContent).map((x, j) => (
                     <div className="cj-claim-cite" key={x.id || `cite-${j}`}>出处：{citationLine(x)}</div>
                   ))}
@@ -459,6 +505,31 @@ export function WorkDetail({ id }: { id: string }) {
           onOk={remove}
           onCancel={() => setConfirmRemove(false)}
         />
+      ) : null}
+
+      {annotatePick ? (
+        <AnnotateModal
+          pick={annotatePick}
+          onSave={saveAnnotation}
+          onClose={() => setAnnotatePick(null)}
+        />
+      ) : null}
+
+      {markModal ? (
+        <Modal title="标注" onClose={() => setMarkModal(null)}>
+          <div className="cj-card">
+            <div className="cj-claim">
+              <Chip tone={markModal.kind}>{CLAIM_GROUP_LABEL[markModal.kind]}</Chip>
+              <div className="cj-claim-text">
+                <Md text={markModal.text} inline />
+              </div>
+              {markModal.anchor?.quote ? <div className="cj-claim-cite">标注范围：{markModal.anchor.quote}</div> : null}
+              {markModal.citations.filter(citationHasContent).map((x, j) => (
+                <div className="cj-claim-cite" key={x.id || `cite-${j}`}>出处：{citationLine(x)}</div>
+              ))}
+            </div>
+          </div>
+        </Modal>
       ) : null}
     </div>
   );
