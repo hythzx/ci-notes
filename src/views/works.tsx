@@ -52,6 +52,7 @@ import { AnnotateModal, useSelectionAnnotate } from '../components/annotate';
 import type { SelectionPick } from '../components/annotate';
 import { citationLine, download, formatDateTime, workToMarkdown } from '../exporter';
 import { navigate } from '../router';
+import { SharePoster, sourceFromWork } from '../components/share-poster';
 
 /* ------------------------------------------------------------------ */
 /* 共用小件                                                            */
@@ -257,6 +258,7 @@ function citationHasContent(c: Citation): boolean {
 
 /** 词作详情（词间 views.workDetail 语义；意象/典故区由 sections 组件提供） */
 export function WorkDetail({ id }: { id: string }) {
+  const [shareOpen, setShareOpen] = useState(false);
   const [detail, setDetail] = useState<WorkDetail | null>(null);
   const [error, setError] = useState('');
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -374,6 +376,7 @@ export function WorkDetail({ id }: { id: string }) {
         <div className="cj-pagehead-ops">
           <a className="cn-btn cn-btn-ghost cn-btn-sm" href={'#/works/' + w.id + '/edit'}>编辑</a>
           <a className="cn-btn cn-btn-ghost cn-btn-sm" href={'#/compare/new?a=' + w.id}>加入对照</a>
+          <button type="button" className="cn-btn cn-btn-primary cn-btn-sm" onClick={() => setShareOpen(true)}>分享图片</button>
           <button type="button" className="cn-btn cn-btn-ghost cn-btn-sm" onClick={doExport}>
             导出 Markdown
           </button>
@@ -496,6 +499,8 @@ export function WorkDetail({ id }: { id: string }) {
       <Section title="典故">
         <AllusionSection targetType="work" targetId={w.id} />
       </Section>
+
+      {shareOpen ? <SharePoster source={sourceFromWork(w)} onClose={() => setShareOpen(false)} /> : null}
 
       {confirmRemove ? (
         <ConfirmBox
