@@ -229,7 +229,7 @@ async function exportPng(svg: SVGSVGElement, title: string) {
       Number.parseFloat(style.fontSize) || 39;
     ctx.font = weight + ' ' + size + 'px ' + family;
     ctx.fillStyle = el.getAttribute('fill') || style.fill || '#302e2a';
-    ctx.textAlign = 'left';
+    ctx.textAlign = el.getAttribute('text-anchor') === 'end' ? 'right' : 'left';
     ctx.textBaseline = 'alphabetic';
     const maxWidth = Number(el.getAttribute('textLength') || 0);
     if (maxWidth > 0) ctx.fillText(el.textContent || '', x, y, maxWidth);
