@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Note, Work } from '../types';
 import { notifyToast } from './ui';
-import '@fontsource/lxgw-wenkai/400.css';
 import '@fontsource/lxgw-wenkai/500.css';
+import '@fontsource/lxgw-wenkai/700.css';
 import './share-poster.css';
 
 type PosterSize = 'portrait' | 'square';
@@ -127,7 +127,7 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
         <text key={i} x="100" y={line.y} fill={p.ink}
           fontFamily={line.emphasized ? emphasisSerif : serif}
           fontSize={line.emphasized ? fontSize + 6 : fontSize}
-          fontWeight={line.emphasized ? 500 : 400}>
+          fontWeight={line.emphasized ? 700 : 500}>
           {line.text}
         </text>
       ))}
@@ -145,8 +145,8 @@ async function exportPng(svg: SVGSVGElement, title: string) {
   const family = '"LXGW WenKai"';
   const textSample = svg.textContent || '词间诗词札记';
   await Promise.all([
-    document.fonts.load('400 43px ' + family, textSample),
-    document.fonts.load('500 49px ' + family, textSample),
+    document.fonts.load('500 43px ' + family, textSample),
+    document.fonts.load('700 49px ' + family, textSample),
   ]);
   await document.fonts.ready;
 
@@ -180,7 +180,7 @@ async function exportPng(svg: SVGSVGElement, title: string) {
     const style = getComputedStyle(el);
     const x = Number(el.getAttribute('x') || 0);
     const y = Number(el.getAttribute('y') || 0);
-    const weight = el.getAttribute('font-weight') || style.fontWeight || '400';
+    const weight = el.getAttribute('font-weight') || style.fontWeight || '500';
     const size = Number(el.getAttribute('font-size') || 0) ||
       Number.parseFloat(style.fontSize) || 39;
     ctx.font = weight + ' ' + size + 'px ' + family;
