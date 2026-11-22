@@ -67,19 +67,35 @@ const BACKGROUNDS = [
 type BackgroundId = typeof BACKGROUNDS[number]['id'];
 const backgroundUrl = (id: BackgroundId) => '/share-bg/' + id + '.webp';
 
+/** 正文字号档位：倍率作用于整套预置档位（字号/行距/段距放大，每行字数相应减少） */
+const FONT_SCALES = [
+  { id: 'standard', name: '标准', mult: 1 },
+  { id: 'large', name: '大', mult: 1.15 },
+  { id: 'xlarge', name: '特大', mult: 1.3 },
+] as const;
+type FontScaleId = typeof FONT_SCALES[number]['id'];
+const scaleMult = (id: FontScaleId) => FONT_SCALES.find(s => s.id === id)?.mult ?? 1;
+
 
 type PosterLine = { text: string; y: number; emphasized: boolean };
 type PosterLayout = { pages: PosterLine[][]; fontSize: number; bottomY: number };
 type TextPart = { text: string; paragraphStart: boolean; emphasized: boolean };
 type LayoutConfig = { fontSize: number; lineHeight: number; paragraphGap: number; wrapUnits: number };
 
-function layoutLines(raw: string, highlight: string, size: PosterSize, kind: Source['kind']): PosterLayout {
+function layoutLines(raw: string, highlight: string, size: PosterSize, kind: Source['kind'], mult = 1): PosterLayout {
   const square = size === 'square';
   // Leave only a modest bottom safety margin. The backdrop already contains its own decoration.
   const startY = square ? 510 : 705;
   const bottomY = square ? 985 : 1770;
   const selected = plainText(highlight).replace(/\s+/g, '').trim();
-  const configs: LayoutConfig[] = square
+  // 字号档位倍率：字号/行距/段距等比放大，每行字数相应减少，分页机制不变。
+  const scale = (cfg: LayoutConfig): LayoutConfig => ({
+    fontSize: Math.round(cfg.fontSize * mult),
+    lineHeight: Math.round(cfg.lineHeight * mult),
+    paragraphGap: Math.round(cfg.paragraphGap * mult),
+    wrapUnits: Math.max(8, Math.round(cfg.wrapUnits / mult)),
+  });
+  const configs: LayoutConfig[] = (square
     ? [
         { fontSize: 37, lineHeight: 70, paragraphGap: 28, wrapUnits: 23 },
         { fontSize: 34, lineHeight: 61, paragraphGap: 20, wrapUnits: 25 },
@@ -96,7 +112,7 @@ function layoutLines(raw: string, highlight: string, size: PosterSize, kind: Sou
           { fontSize: 39, lineHeight: 78, paragraphGap: 36, wrapUnits: 24 },
           { fontSize: 36, lineHeight: 69, paragraphGap: 26, wrapUnits: 26 },
           { fontSize: 33, lineHeight: 61, paragraphGap: 19, wrapUnits: 28 },
-        ];
+        ]).map(scale);
   const paragraphs = plainText(raw).split(/\n+/).map(s => s.trim()).filter(Boolean);
   const prepare = (cfg: LayoutConfig): TextPart[] => paragraphs.flatMap((paragraph, index) => {
     const lines = breakLines(paragraph, cfg.wrapUnits);
@@ -268,13 +284,18 @@ async function exportPng(svg: SVGSVGElement, title: string) {
 export function SharePoster({ source, onClose }: Props) {
   const [background, setBackground] = useState<BackgroundId>('spring');
   const [size, setSize] = useState<PosterSize>('portrait');
+  // 默认「大」：正文在手机上看要够清楚，标准档留给内容很长时兜底
+  const [fontScale, setFontScale] = useState<FontScaleId>('large');
   const [excerpt, setExcerpt] = useState(source.content);
   const [highlight, setHighlight] = useState('');
   const [busy, setBusy] = useState(false);
   const [page, setPage] = useState(0);
   const svgRef = useRef<HTMLDivElement>(null);
   const count = useMemo(() => plainText(excerpt).length, [excerpt]);
-  const layout = useMemo(() => layoutLines(excerpt, highlight, size, source.kind), [excerpt, highlight, size, source.kind]);
+  const layout = useMemo(
+    () => layoutLines(excerpt, highlight, size, source.kind, scaleMult(fontScale)),
+    [excerpt, highlight, size, source.kind, fontScale],
+  );
   const currentPage = Math.min(page, layout.pages.length - 1);
   async function save() {
     const svg = svgRef.current?.querySelector('svg');
@@ -293,6 +314,7 @@ export function SharePoster({ source, onClose }: Props) {
       <div className="cj-share-layout">
         <div className="cj-share-controls">
           <label>画面比例<select value={size} onChange={e=>setSize(e.target.value as PosterSize)}><option value="portrait">竖版 · 9:16</option><option value="square">方形 · 1:1</option></select></label>
+          <label>正文字号<select value={fontScale} onChange={e=>setFontScale(e.target.value as FontScaleId)}>{FONT_SCALES.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           <fieldset className="cj-share-backgrounds"><legend>选择背景</legend><div className="cj-share-background-grid">
             {BACKGROUNDS.map(item => <button key={item.id} type="button" className={background === item.id ? 'cj-share-bg-on' : ''}
               aria-pressed={background === item.id} onClick={() => setBackground(item.id)}>
@@ -300,7 +322,7 @@ export function SharePoster({ source, onClose }: Props) {
             </button>)}
           </div></fieldset>
           <label>海报正文<textarea value={excerpt} rows={8} onChange={e=>setExcerpt(e.target.value)} placeholder="填写要分享到图片上的文字" /></label>
-          <p className="cj-share-hint">当前 {count} 字，自动选择适合的字号与行距。较长内容自动分页，正文不会被截断。</p>
+          <p className="cj-share-hint">当前 {count} 字，按所选字号自动匹配行距。较长内容自动分页，正文不会被截断。</p>
           <label>重点句（可选）<input value={highlight} maxLength={70} onChange={e=>setHighlight(e.target.value)} placeholder="单独强调的一句" /></label>
           {layout.pages.length > 1 ? <div className="cj-share-pager">
             <button type="button" disabled={currentPage === 0} onClick={() => setPage(Math.max(0, currentPage - 1))}>上一页</button>

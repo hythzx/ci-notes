@@ -1,6 +1,6 @@
 {
   "name": "ci-notes",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "private": true,
   "type": "module",
   "description": "词间：可自行部署的古典诗词随笔与阅读札记",
