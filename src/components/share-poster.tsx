@@ -13,7 +13,7 @@ const PALETTES = {
   night: { paper: '#243532', ink: '#f3e9d5', soft: '#becabd', mountain: '#536a64', accent: '#c7b58a', wash: '#455b54' },
 };
 const serif = '"Noto Serif SC","Source Han Serif SC","Songti SC","STSong",serif';
-const emphasisSerif = '"Kaiti SC","STKaiti","KaiTi","Noto Serif SC","Source Han Serif SC","Songti SC","STSong",serif';
+const emphasisSerif = '"Songti SC","STSong","Noto Serif SC","Source Han Serif SC","SimSun",serif';
 
 export function sourceFromWork(w: Work): Source {
   return {
