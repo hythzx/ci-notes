@@ -69,40 +69,84 @@ const backgroundUrl = (id: BackgroundId) => '/share-bg/' + id + '.webp';
 
 
 type PosterLine = { text: string; y: number; emphasized: boolean };
-function layoutLines(raw: string, highlight: string, size: PosterSize, kind: Source['kind']): { lines: PosterLine[]; truncated: boolean } {
+type PosterLayout = { pages: PosterLine[][]; fontSize: number; bottomY: number };
+type TextPart = { text: string; paragraphStart: boolean; emphasized: boolean };
+type LayoutConfig = { fontSize: number; lineHeight: number; paragraphGap: number; wrapUnits: number };
+
+function layoutLines(raw: string, highlight: string, size: PosterSize, kind: Source['kind']): PosterLayout {
   const square = size === 'square';
-  const fontSize = square ? 37 : kind === 'work' ? 43 : 39;
-  const lineHeight = square ? 67 : kind === 'work' ? 88 : 80;
-  const maxY = square ? 910 : 1450;
-  const startY = square ? 516 : 725;
-  const selected = plainText(highlight).replace(/\\s+/g, '').trim();
-  const paragraphs = plainText(raw).split(/\\n+/).map(x => x.trim()).filter(Boolean);
-  const result: PosterLine[] = [];
-  let y = startY;
-  let truncated = false;
-  for (let i = 0; i < paragraphs.length; i++) {
-    const lines = breakLines(paragraphs[i], square ? 23 : (kind === 'work' ? 21 : 24));
-    for (let j = 0; j < lines.length; j++) {
-      if (y > maxY) { truncated = true; break; }
-      const line = lines[j];
-      // Emphasize the original text in place. No duplicated quote or opaque banner.
-      const compact = line.replace(/\\s+/g, '');
-      result.push({ text: line, y, emphasized: !!selected && (compact.includes(selected) || (selected.length >= 5 && selected.includes(compact))) });
-      y += lineHeight;
+  // Leave only a modest bottom safety margin. The backdrop already contains its own decoration.
+  const startY = square ? 510 : 705;
+  const bottomY = square ? 985 : 1770;
+  const selected = plainText(highlight).replace(/\s+/g, '').trim();
+  const configs: LayoutConfig[] = square
+    ? [
+        { fontSize: 37, lineHeight: 70, paragraphGap: 28, wrapUnits: 23 },
+        { fontSize: 34, lineHeight: 61, paragraphGap: 20, wrapUnits: 25 },
+        { fontSize: 31, lineHeight: 55, paragraphGap: 16, wrapUnits: 28 },
+      ]
+    : kind === 'work'
+      ? [
+          { fontSize: 43, lineHeight: 88, paragraphGap: 46, wrapUnits: 21 },
+          { fontSize: 40, lineHeight: 79, paragraphGap: 34, wrapUnits: 23 },
+          { fontSize: 37, lineHeight: 70, paragraphGap: 24, wrapUnits: 25 },
+          { fontSize: 35, lineHeight: 65, paragraphGap: 18, wrapUnits: 27 },
+        ]
+      : [
+          { fontSize: 39, lineHeight: 78, paragraphGap: 36, wrapUnits: 24 },
+          { fontSize: 36, lineHeight: 69, paragraphGap: 26, wrapUnits: 26 },
+          { fontSize: 33, lineHeight: 61, paragraphGap: 19, wrapUnits: 28 },
+        ];
+  const paragraphs = plainText(raw).split(/\n+/).map(s => s.trim()).filter(Boolean);
+  const prepare = (cfg: LayoutConfig): TextPart[] => paragraphs.flatMap((paragraph, index) => {
+    const lines = breakLines(paragraph, cfg.wrapUnits);
+    return lines.map((line, i) => {
+      const compact = line.replace(/\s+/g, '');
+      return { text: line, paragraphStart: index > 0 && i === 0,
+        emphasized: !!selected && (compact.includes(selected) ||
+          (selected.length >= 5 && selected.includes(compact))) };
+    });
+  });
+  const canFit = (parts: TextPart[], cfg: LayoutConfig) => {
+    let y = startY;
+    for (const part of parts) {
+      if (part.paragraphStart) y += cfg.paragraphGap;
+      if (y + (part.emphasized ? 7 : 0) > bottomY) return false;
+      y += cfg.lineHeight;
     }
-    if (truncated) break;
-    if (i < paragraphs.length - 1) y += square ? 28 : 48;
+    return true;
+  };
+  const config = configs.find(cfg => canFit(prepare(cfg), cfg)) || configs[configs.length - 1];
+  const parts = prepare(config);
+  const pages: PosterLine[][] = [[]];
+  let y = startY;
+  for (const part of parts) {
+    const extra = part.paragraphStart && pages[pages.length - 1].length > 0 ? config.paragraphGap : 0;
+    if (y + extra + (part.emphasized ? 7 : 0) > bottomY && pages[pages.length - 1].length > 0) {
+      pages.push([]);
+      y = startY;
+    } else {
+      y += extra;
+    }
+    pages[pages.length - 1].push({ text: part.text, y, emphasized: part.emphasized });
+    y += config.lineHeight;
   }
-  return { lines: result, truncated };
+  // Visually balance short complete pages without consuming the safety margin.
+  for (const page of pages) {
+    if (!page.length) continue;
+    const remaining = bottomY - page[page.length - 1].y;
+    const shift = Math.min(square ? 50 : 115, Math.max(0, remaining * 0.3));
+    for (const line of page) line.y += shift;
+  }
+  return { pages, fontSize: config.fontSize, bottomY };
 }
 
-function PosterArt({ source, background, size, highlight, excerpt }: {
-  source: Source; background: BackgroundId; size: PosterSize; highlight: string; excerpt: string;
+function PosterArt({ source, background, size, layout, page }: {
+  source: Source; background: BackgroundId; size: PosterSize; layout: PosterLayout; page: number;
 }) {
   const p = BACKGROUNDS.find(b => b.id === background) ?? BACKGROUNDS[0];
   const square = size === 'square', height = square ? 1080 : 1920;
-  const fontSize = square ? 37 : source.kind === 'work' ? 43 : 39;
-  const layout = layoutLines(excerpt, highlight, size, source.kind);
+  const fontSize = layout.fontSize;
   const titleSize = source.title.length > 15 ? 48 : source.title.length > 10 ? 60 : 74;
   const labelY = square ? 310 : 410;
   const titleY = square ? 402 : 520;
@@ -123,7 +167,7 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
       {source.subtitle.slice(0, 36)}
     </text>
     <g fontFamily={serif} fontSize={fontSize}>
-      {layout.lines.map((line, i) => (
+      {(layout.pages[page] || []).map((line, i) => (
         <text key={i} x="100" y={line.y} fill={p.ink}
           fontFamily={line.emphasized ? emphasisSerif : serif}
           fontSize={line.emphasized ? fontSize + 6 : fontSize}
@@ -131,8 +175,8 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
           {line.text}
         </text>
       ))}
-      {layout.truncated ? <text x="100" y={Math.min(square ? 987 : 1532, (layout.lines.at(-1)?.y || 720) + 78)}
-        fill={p.soft} fontSize="29">……</text> : null}
+      {layout.pages.length > 1 ? <text x="980" y={square ? 1015 : 1815}
+        fill={p.soft} fontSize="25" textAnchor="end">{page + 1} / {layout.pages.length}</text> : null}
     </g>
   </svg>;
 }
@@ -185,7 +229,7 @@ async function exportPng(svg: SVGSVGElement, title: string) {
       Number.parseFloat(style.fontSize) || 39;
     ctx.font = weight + ' ' + size + 'px ' + family;
     ctx.fillStyle = el.getAttribute('fill') || style.fill || '#302e2a';
-    ctx.textAlign = 'left';
+    ctx.textAlign = el.getAttribute('text-anchor') === 'end' ? 'right' : 'left';
     ctx.textBaseline = 'alphabetic';
     const maxWidth = Number(el.getAttribute('textLength') || 0);
     if (maxWidth > 0) ctx.fillText(el.textContent || '', x, y, maxWidth);
@@ -227,13 +271,16 @@ export function SharePoster({ source, onClose }: Props) {
   const [excerpt, setExcerpt] = useState(source.content);
   const [highlight, setHighlight] = useState('');
   const [busy, setBusy] = useState(false);
+  const [page, setPage] = useState(0);
   const svgRef = useRef<HTMLDivElement>(null);
   const count = useMemo(() => plainText(excerpt).length, [excerpt]);
+  const layout = useMemo(() => layoutLines(excerpt, highlight, size, source.kind), [excerpt, highlight, size, source.kind]);
+  const currentPage = Math.min(page, layout.pages.length - 1);
   async function save() {
     const svg = svgRef.current?.querySelector('svg');
     if (!svg || busy) return;
     setBusy(true);
-    try { await exportPng(svg, source.title); notifyToast('图片已导出'); }
+    try { await exportPng(svg, layout.pages.length > 1 ? source.title + '-第' + (currentPage + 1) + '页' : source.title); notifyToast('图片已导出'); }
     catch (e) { notifyToast(e instanceof Error ? e.message : '图片导出失败'); }
     finally { setBusy(false); }
   }
@@ -253,12 +300,17 @@ export function SharePoster({ source, onClose }: Props) {
             </button>)}
           </div></fieldset>
           <label>海报正文<textarea value={excerpt} rows={8} onChange={e=>setExcerpt(e.target.value)} placeholder="填写要分享到图片上的文字" /></label>
-          <p className="cj-share-hint">当前 {count} 字。长文建议节选；超出画面的部分会以省略号提示，不会修改原文。</p>
+          <p className="cj-share-hint">当前 {count} 字，自动选择适合的字号与行距。较长内容自动分页，正文不会被截断。</p>
           <label>重点句（可选）<input value={highlight} maxLength={70} onChange={e=>setHighlight(e.target.value)} placeholder="单独强调的一句" /></label>
-          <button type="button" className="cn-btn cn-btn-primary" onClick={save} disabled={busy}>{busy ? '正在生成…' : '保存 PNG 图片'}</button>
+          {layout.pages.length > 1 ? <div className="cj-share-pager">
+            <button type="button" disabled={currentPage === 0} onClick={() => setPage(Math.max(0, currentPage - 1))}>上一页</button>
+            <span>第 {currentPage + 1} / {layout.pages.length} 页</span>
+            <button type="button" disabled={currentPage === layout.pages.length - 1} onClick={() => setPage(Math.min(layout.pages.length - 1, currentPage + 1))}>下一页</button>
+          </div> : null}
+          <button type="button" className="cn-btn cn-btn-primary" onClick={save} disabled={busy}>{busy ? '正在生成…' : layout.pages.length > 1 ? '保存当前页 PNG' : '保存 PNG 图片'}</button>
           <p className="cj-share-hint">分享到朋友圈或抖音前，请先保存图片。本站不自动发布到第三方平台。</p>
         </div>
-        <div className="cj-share-preview"><div ref={svgRef}><PosterArt source={source} background={background} size={size} highlight={highlight} excerpt={excerpt} /></div></div>
+        <div className="cj-share-preview"><div ref={svgRef}><PosterArt source={source} background={background} size={size} layout={layout} page={currentPage} /></div></div>
       </div>
     </section>
   </div>;
