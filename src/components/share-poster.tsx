@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Note, Work } from '../types';
 import { notifyToast } from './ui';
+import '@fontsource/lxgw-wenkai/400.css';
+import '@fontsource/lxgw-wenkai/500.css';
 import './share-poster.css';
 
 type PosterSize = 'portrait' | 'square';
@@ -12,8 +14,8 @@ const PALETTES = {
   paper: { paper: '#f7eee0', ink: '#3b302a', soft: '#8a7260', mountain: '#d1bba6', accent: '#a27e60', wash: '#efe0cd' },
   night: { paper: '#243532', ink: '#f3e9d5', soft: '#becabd', mountain: '#536a64', accent: '#c7b58a', wash: '#455b54' },
 };
-const serif = '"Noto Serif SC","Source Han Serif SC","Songti SC","STSong",serif';
-const emphasisSerif = '"Songti SC","STSong","Noto Serif SC","Source Han Serif SC","SimSun",serif';
+const serif = '"LXGW WenKai","Noto Serif SC","Source Han Serif SC","Songti SC",serif';
+const emphasisSerif = serif;
 
 export function sourceFromWork(w: Work): Source {
   return {
@@ -115,7 +117,7 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
     </text>
     <path d={`M224 ${labelY - 9} H348`} stroke={p.accent} strokeWidth="1.4" opacity=".65" />
     <text x="98" y={titleY} fontFamily={serif} fontSize={titleSize}
-      fill={p.ink} fontWeight="600" textLength={source.title.length > 19 ? 850 : undefined}
+      fill={p.ink} fontWeight="500" textLength={source.title.length > 19 ? 850 : undefined}
       lengthAdjust="spacingAndGlyphs">{source.title}</text>
     <text x="101" y={subtitleY} fontFamily={serif} fontSize="27" fill={p.soft}>
       {source.subtitle.slice(0, 36)}
@@ -125,7 +127,7 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
         <text key={i} x="100" y={line.y} fill={p.ink}
           fontFamily={line.emphasized ? emphasisSerif : serif}
           fontSize={line.emphasized ? fontSize + 6 : fontSize}
-          fontWeight={line.emphasized ? 700 : 400}>
+          fontWeight={line.emphasized ? 500 : 400}>
           {line.text}
         </text>
       ))}
@@ -135,50 +137,87 @@ function PosterArt({ source, background, size, highlight, excerpt }: {
   </svg>;
 }
 
+/**
+ * Render directly to Canvas so the bundled Web Font also appears in the downloaded PNG.
+ * SVG image rasterization does not reliably carry @font-face into a data: SVG document.
+ */
 async function exportPng(svg: SVGSVGElement, title: string) {
-  // Inline the static background as a data URL before Canvas export.
+  const family = '"LXGW WenKai"';
+  const textSample = svg.textContent || '词间诗词札记';
+  await Promise.all([
+    document.fonts.load('400 43px ' + family, textSample),
+    document.fonts.load('500 49px ' + family, textSample),
+  ]);
   await document.fonts.ready;
-  // Inline the same-origin backdrop before SVG → Canvas to avoid broken image exports.
-  const clone = svg.cloneNode(true) as SVGSVGElement;
-  const bg = clone.querySelector('image');
-  if (bg) {
-    const href = bg.getAttribute('href');
-    if (href) {
-      const response = await fetch(href);
-      if (!response.ok) throw new Error('背景图片尚未安装，请先复制 public/share-bg 素材');
-      const blob = await response.blob();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error('读取背景失败'));
-        reader.readAsDataURL(blob);
-      });
-      bg.setAttribute('href', dataUrl);
-    }
-  }
-  const xml = new XMLSerializer().serializeToString(clone);
-  // The app's CSP permits data: images but explicitly blocks blob: in img-src.
-  // Embed the SVG in a data URL instead of creating an object URL for Image.src.
-  const imageUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
-  {
-    const image = new Image();
-    image.src = imageUrl;
-    await image.decode();
-    const canvas = document.createElement('canvas');
-    canvas.width = svg.viewBox.baseVal.width;
-    canvas.height = svg.viewBox.baseVal.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('当前浏览器不支持图片导出');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = svg.viewBox.baseVal.width;
+  canvas.height = svg.viewBox.baseVal.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('当前浏览器不支持图片导出');
+
+  // Same-origin image: no blob: image URL or cross-origin canvas taint.
+  const bg = svg.querySelector('image');
+  const href = bg?.getAttribute('href');
+  if (!href) throw new Error('找不到背景图片');
+  const image = new Image();
+  image.src = href;
+  await image.decode();
+  const square = canvas.height === 1080;
+  if (square) {
+    // Match SVG preserveAspectRatio="xMidYMin slice" for 1080×1080 cards.
+    const visibleHeight = image.naturalWidth === 0 ? 1080 :
+      image.naturalWidth * canvas.height / canvas.width;
+    ctx.drawImage(image, 0, 0, image.naturalWidth, Math.min(image.naturalHeight, visibleHeight),
+      0, 0, canvas.width, canvas.height);
+  } else {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
-    if (!blob) throw new Error('图片生成失败');
-    const downloadUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = `词间-${filename(title)}.png`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(downloadUrl), 2000);
-    return blob;
+  }
+
+  // All dynamic copy is drawn from the same SVG element coordinates.
+  // This keeps live preview and export consistent without serializing font faces.
+  for (const el of svg.querySelectorAll<SVGTextElement>('text')) {
+    const style = getComputedStyle(el);
+    const x = Number(el.getAttribute('x') || 0);
+    const y = Number(el.getAttribute('y') || 0);
+    const weight = el.getAttribute('font-weight') || style.fontWeight || '400';
+    const size = Number(el.getAttribute('font-size') || 0) ||
+      Number.parseFloat(style.fontSize) || 39;
+    ctx.font = weight + ' ' + size + 'px ' + family;
+    ctx.fillStyle = el.getAttribute('fill') || style.fill || '#302e2a';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    const maxWidth = Number(el.getAttribute('textLength') || 0);
+    if (maxWidth > 0) ctx.fillText(el.textContent || '', x, y, maxWidth);
+    else ctx.fillText(el.textContent || '', x, y);
+  }
+
+  // Small section separator from the SVG artwork.
+  const label = svg.querySelector('path');
+  if (label) {
+    const y = square ? 301 : 401;
+    ctx.strokeStyle = '#809582';
+    ctx.globalAlpha = 0.65;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(224, y);
+    ctx.lineTo(348, y);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error('PNG 图片生成失败');
+  const url = URL.createObjectURL(blob);
+  try {
+    const link = document.createElement('a');
+    link.download = '词间-' + filename(title) + '.png';
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } finally {
+    window.setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 }
 
