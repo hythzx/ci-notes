@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca; fi; \
-    npm ci --no-audit --no-fund
+    npm ci --no-audit --no-fund --registry=https://registry.npmmirror.com --replace-registry-host=npmjs
 COPY index.html tsconfig.json vite.config.ts ./
 COPY src ./src
 COPY public ./public
